@@ -16,25 +16,60 @@ export function SearchPage() {
     enabled: searchQuery.length > 0,
   })
 
-  // Client-side highlight matching
+  // Client-side snippet extraction with match highlighting
   const highlighted = useMemo(() => {
     if (!searchQuery || !results.length) return results
     const terms = searchQuery.toLowerCase().split(/\s+/).filter(Boolean)
+    const CONTEXT = 60
+
     return results.map((entry) => {
-      let content = entry.content
-      // Find context around matching terms
+      const original = entry.content
+      const lower = original.toLowerCase()
+
+      // Find all match positions in the original content
+      const matches = []
       terms.forEach((term) => {
-        const idx = content.toLowerCase().indexOf(term)
-        if (idx !== -1) {
-          const start = Math.max(0, idx - 60)
-          const end = Math.min(content.length, idx + term.length + 60)
-          let snippet = content.slice(start, end)
-          if (start > 0) snippet = '…' + snippet
-          if (end < content.length) snippet += '…'
-          content = snippet
+        let pos = 0
+        while (true) {
+          const idx = lower.indexOf(term, pos)
+          if (idx === -1) break
+          matches.push({ start: idx, end: idx + term.length })
+          pos = idx + 1
         }
       })
-      return { ...entry, content }
+
+      if (matches.length === 0) return { ...entry, content: original.slice(0, CONTEXT * 2) + (original.length > CONTEXT * 2 ? '…' : '') }
+
+      // Compute a single snippet window covering all matches (with context)
+      const windowStart = Math.max(0, matches[0].start - CONTEXT)
+      const windowEnd = Math.min(original.length, matches[matches.length - 1].end + CONTEXT)
+
+      let snippet = original.slice(windowStart, windowEnd)
+      if (windowStart > 0) snippet = '…' + snippet
+      if (windowEnd < original.length) snippet += '…'
+
+      // Build highlighted segments with <mark> tags
+      const parts = []
+      let cursor = 0
+      // Adjust match positions relative to the snippet start
+      const offset = windowStart - (windowStart > 0 ? 1 : 0) // account for leading '…'
+
+      matches.forEach((m) => {
+        const relStart = m.start - windowStart + (windowStart > 0 ? 1 : 0)
+        const relEnd = m.end - windowStart + (windowStart > 0 ? 1 : 0)
+        if (relStart < 0 || relEnd > snippet.length) return // match outside window
+
+        if (relStart > cursor) {
+          parts.push(snippet.slice(cursor, relStart))
+        }
+        parts.push(`<mark>${snippet.slice(relStart, relEnd)}</mark>`)
+        cursor = relEnd
+      })
+      if (cursor < snippet.length) {
+        parts.push(snippet.slice(cursor))
+      }
+
+      return { ...entry, content: parts.join('') }
     })
   }, [results, searchQuery])
 
@@ -120,9 +155,10 @@ export function SearchPage() {
                     </span>
                     {entry.mood && <MoodBadge mood={entry.mood} />}
                   </div>
-                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {entry.content}
-                  </p>
+                  <p
+                    className="text-sm text-foreground whitespace-pre-wrap leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: entry.content }}
+                  />
                 </article>
               ))}
             </div>

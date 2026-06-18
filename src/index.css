@@ -137,4 +137,12 @@
   html {
     @apply font-mono;
   }
+
+  /* Search result highlight */
+  mark {
+    background-color: hsl(var(--primary) / 0.2);
+    color: hsl(var(--primary));
+    border-radius: 0.2rem;
+    padding: 0 0.1rem;
+  }
 }
