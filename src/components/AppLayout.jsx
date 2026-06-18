@@ -1,11 +1,13 @@
-import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from '@/components/Sidebar'
-import { List, X } from '@phosphor-icons/react'
+import { List } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { useDiaryStore } from '@/stores/useDiaryStore'
 
 export function AppLayout() {
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const sidebarOpen = useDiaryStore((s) => s.sidebarOpen)
+  const openSidebar = useDiaryStore((s) => s.openSidebar)
+  const closeSidebar = useDiaryStore((s) => s.closeSidebar)
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -13,17 +15,17 @@ export function AppLayout() {
       <div
         className={cn(
           'fixed inset-0 z-40 transition-opacity md:hidden',
-          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
+          sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         )}
       >
         {/* Backdrop */}
         <div
           className="absolute inset-0 bg-black/50"
-          onClick={() => setMobileOpen(false)}
+          onClick={closeSidebar}
         />
         {/* Sidebar panel */}
         <div className="relative h-full w-56">
-          <Sidebar onNavigate={() => setMobileOpen(false)} />
+          <Sidebar />
         </div>
       </div>
 
@@ -37,7 +39,7 @@ export function AppLayout() {
         {/* Mobile header with hamburger */}
         <div className="flex items-center md:hidden mb-4">
           <button
-            onClick={() => setMobileOpen(true)}
+            onClick={openSidebar}
             className="p-2 rounded-lg hover:bg-accent text-muted-foreground transition-colors"
           >
             <List weight="bold" className="w-5 h-5" />

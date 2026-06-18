@@ -10,6 +10,7 @@ import {
 } from '@phosphor-icons/react'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
+import { useDiaryStore } from '@/stores/useDiaryStore'
 
 const links = [
   { to: '/dashboard', label: 'Dashboard', icon: House },
@@ -20,8 +21,9 @@ const links = [
   { to: '/settings', label: 'Settings', icon: Gear },
 ]
 
-export function Sidebar({ onNavigate }) {
+export function Sidebar() {
   const { logout } = useAuth()
+  const closeSidebar = useDiaryStore((s) => s.closeSidebar)
 
   return (
     <aside className="flex flex-col h-full border-r border-border bg-card w-56 shrink-0">
@@ -39,7 +41,7 @@ export function Sidebar({ onNavigate }) {
           <NavLink
             key={to}
             to={to}
-            onClick={onNavigate}
+            onClick={closeSidebar}
             className={({ isActive }) =>
               cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
