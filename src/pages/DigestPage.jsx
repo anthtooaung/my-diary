@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api'
 import { EmptyState } from '@/components/EmptyState'
 import { parseDate } from '@/lib/utils'
-import { NewspaperClipping, CaretLeft, CaretRight, WarningOctagon } from '@phosphor-icons/react'
+import { NewspaperClipping, CaretLeft, CaretRight, WarningOctagon, TrendUp, TrendDown } from '@phosphor-icons/react'
 
 function getWeekRange(date) {
   const d = new Date(date)
@@ -126,7 +126,7 @@ export function DigestPage() {
 
       {/* Digest content */}
       {isLoading ? (
-        <div className="rounded-xl border border-border bg-card p-6 animate-pulse">
+        <div className="rounded-xl border border-border bg-card p-5 animate-pulse">
           <div className="h-4 bg-muted rounded w-1/3 mb-3" />
           <div className="h-3 bg-muted rounded w-full mb-2" />
           <div className="h-3 bg-muted rounded w-5/6 mb-2" />
@@ -146,7 +146,7 @@ export function DigestPage() {
           description="Write diary entries throughout the week to see your digest here."
         />
       ) : (
-        <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+        <div className="rounded-xl border border-border bg-card p-5 space-y-5">
           {/* Mood */}
           <div>
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
@@ -158,10 +158,10 @@ export function DigestPage() {
                   Mostly <span className="font-semibold">{digest.dominantMood}</span> this week
                   ({digest.maxCount} of {digest.allMoods.length} entries)
                   {digest.trend === 'up' && (
-                    <span className="text-emerald-500"> — trending up 📈</span>
+                    <span className="text-primary"> — trending up <TrendUp weight="fill" className="w-3.5 h-3.5 inline" /></span>
                   )}
                   {digest.trend === 'down' && (
-                    <span className="text-red-500"> — trending down 📉</span>
+                    <span className="text-destructive"> — trending down <TrendDown weight="fill" className="w-3.5 h-3.5 inline" /></span>
                   )}
                   {digest.trend === 'steady' && ' — staying steady'}
                 </>
@@ -198,8 +198,8 @@ export function DigestPage() {
             </h3>
             <p className="text-sm text-foreground">
               You wrote <span className="font-semibold">{digest.entryCount}</span> entries this week.
-              {digest.entryCount >= 7 && ' A full week — great consistency! 🎉'}
-              {digest.entryCount >= 5 && digest.entryCount < 7 && ' Almost every day. Keep it up! 💪'}
+              {digest.entryCount >= 7 && ' A full week — great consistency!'}
+              {digest.entryCount >= 5 && digest.entryCount < 7 && ' Almost every day. Keep it up!'}
               {digest.entryCount < 5 && ' Try writing more often for richer insights.'}
             </p>
           </div>

@@ -17,6 +17,7 @@ export function GoalsPage() {
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('weekly')
   const [deadline, setDeadline] = useState('')
+  const [saved, setSaved] = useState(false)
 
   const { data: goals = [], isLoading } = useQuery({
     queryKey: ['goals'],
@@ -28,6 +29,8 @@ export function GoalsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] })
       resetForm()
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
     onError: () => {
       // error displayed below form
@@ -39,6 +42,8 @@ export function GoalsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] })
       resetForm()
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
     onError: () => {
       // error displayed below form
@@ -136,7 +141,7 @@ export function GoalsPage() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {categories.map((c) => (
                 <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
@@ -146,7 +151,7 @@ export function GoalsPage() {
               type="date"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <button
               type="submit"
@@ -161,6 +166,11 @@ export function GoalsPage() {
               {createMutation.isError
                 ? createMutation.error.message
                 : updateMutation.error.message}
+            </p>
+          )}
+          {saved && (
+            <p className="text-sm text-emerald-500 font-medium">
+              Goal {editing ? 'updated' : 'created'}!
             </p>
           )}
         </form>

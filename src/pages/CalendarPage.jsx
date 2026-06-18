@@ -14,9 +14,11 @@ export function CalendarPage() {
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
 
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+
   // Fetch moods for this month
   const start = `${year}-${String(month + 1).padStart(2, '0')}-01`
-  const end = `${year}-${String(month + 1).padStart(2, '0')}-31`
+  const end = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`
   const { data: moods = [], isError: moodsError } = useQuery({
     queryKey: ['moods', start, end],
     queryFn: () => api.getMoods({ start, end }),
@@ -45,7 +47,6 @@ export function CalendarPage() {
     setSelectedDate(null)
   }
 
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
   const firstDay = new Date(year, month, 1).getDay()
   const monthLabel = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 
@@ -141,7 +142,11 @@ export function CalendarPage() {
               </p>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No entry for this day.</p>
+            <EmptyState
+              icon={CalendarDots}
+              title="No entry"
+              description="You didn&apos;t write anything on this day."
+            />
           )}
         </div>
       )}

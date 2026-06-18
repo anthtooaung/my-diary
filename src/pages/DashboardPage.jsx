@@ -4,7 +4,7 @@ import { api } from '@/api'
 import { EntryCard } from '@/components/EntryCard'
 import { MoodBadge } from '@/components/MoodBadge'
 import { EmptyState } from '@/components/EmptyState'
-import { PencilLine, Smiley, SmileyAngry, SmileyMeh, SmileyNervous, SmileySad, SmileyXEyes } from '@phosphor-icons/react'
+import { PencilLine, Smiley, SmileyAngry, SmileyMeh, SmileyNervous, SmileySad, SmileyXEyes, Notebook } from '@phosphor-icons/react'
 
 const moods = [
   { value: 'happy', label: 'Happy', icon: Smiley, color: 'bg-emerald-500' },
@@ -19,6 +19,7 @@ export function DashboardPage() {
   const queryClient = useQueryClient()
   const [content, setContent] = useState('')
   const [mood, setMood] = useState('')
+  const [saved, setSaved] = useState(false)
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['entries'],
@@ -31,6 +32,8 @@ export function DashboardPage() {
       queryClient.invalidateQueries({ queryKey: ['entries'] })
       setContent('')
       setMood('')
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
   })
 
@@ -49,10 +52,10 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Write entry form */}
       <section>
-        <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
           <PencilLine weight="duotone" className="w-5 h-5 text-primary" />
           Today&apos;s Entry
         </h2>
@@ -99,13 +102,19 @@ export function DashboardPage() {
             {createMutation.isError && (
               <p className="text-sm text-destructive">{createMutation.error.message}</p>
             )}
+            {saved && (
+              <p className="text-sm text-emerald-500 font-medium">Entry saved!</p>
+            )}
           </div>
         </form>
       </section>
 
       {/* Recent entries */}
       <section>
-        <h2 className="text-lg font-bold text-foreground mb-4">Recent Entries</h2>
+        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+          <Notebook weight="duotone" className="w-5 h-5 text-primary" />
+          Recent Entries
+        </h2>
         {deleteMutation.isError && (
           <p className="text-sm text-destructive mb-3 flex items-center gap-1.5">
             Failed to delete entry. Please try again.

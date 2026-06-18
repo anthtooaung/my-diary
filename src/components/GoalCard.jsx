@@ -13,7 +13,7 @@ export function GoalCard({ goal, onToggle, onEdit, onDelete }) {
   return (
     <div
       className={cn(
-        'rounded-xl border p-4 transition-colors',
+        'rounded-xl border p-5 transition-colors',
         goal.status === 'completed'
           ? 'border-border bg-card/50 opacity-60'
           : 'border-border bg-card hover:border-muted-foreground/40',

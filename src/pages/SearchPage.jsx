@@ -56,13 +56,13 @@ export function SearchPage() {
           placeholder="Search your entries…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+          className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
           autoFocus
         />
         <button
           type="submit"
           disabled={!query.trim() || isLoading}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
         >
           <MagnifyingGlass weight="bold" className="w-4 h-4" />
           Search

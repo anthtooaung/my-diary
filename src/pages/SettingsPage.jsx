@@ -62,7 +62,7 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-lg">
+    <div className="space-y-6 max-w-lg">
       <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
         <Gear weight="duotone" className="w-5 h-5 text-primary" />
         Settings
@@ -115,7 +115,7 @@ export function SettingsPage() {
 
           <button
             type="submit"
-            disabled={passwordMutation.isPending}
+            disabled={passwordMutation.isPending || !currentPassword.trim() || !newPassword.trim() || !confirm.trim()}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {passwordMutation.isPending ? 'Updating…' : 'Update Password'}
