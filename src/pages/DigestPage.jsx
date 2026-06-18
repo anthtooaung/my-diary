@@ -4,6 +4,7 @@ import { api } from '@/api'
 import { EmptyState } from '@/components/EmptyState'
 import { parseDate } from '@/lib/utils'
 import { NewspaperClipping, CaretLeft, CaretRight, WarningOctagon, TrendUp, TrendDown } from '@phosphor-icons/react'
+import { POSITIVE_MOODS } from '@/lib/moods'
 
 function getWeekRange(date) {
   const d = new Date(date)
@@ -74,9 +75,8 @@ export function DigestPage() {
     const firstHalf = entries.slice(0, half).map((e) => e.mood).filter(Boolean)
     const secondHalf = entries.slice(half).map((e) => e.mood).filter(Boolean)
 
-    const positive = ['happy', 'neutral']
-    const firstPos = firstHalf.filter((m) => positive.includes(m)).length
-    const secondPos = secondHalf.filter((m) => positive.includes(m)).length
+    const firstPos = firstHalf.filter((m) => POSITIVE_MOODS.includes(m)).length
+    const secondPos = secondHalf.filter((m) => POSITIVE_MOODS.includes(m)).length
 
     let trend = 'steady'
     if (secondPos > firstPos + 1) trend = 'up'

@@ -1,25 +1,23 @@
 import { useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api'
 import { EntryCard } from '@/components/EntryCard'
-import { MoodBadge } from '@/components/MoodBadge'
 import { EmptyState } from '@/components/EmptyState'
-import { PencilLine, Smiley, SmileyAngry, SmileyMeh, SmileyNervous, SmileySad, SmileyXEyes, Notebook } from '@phosphor-icons/react'
-
-const moods = [
-  { value: 'happy', label: 'Happy', icon: Smiley, color: 'bg-emerald-500' },
-  { value: 'neutral', label: 'Neutral', icon: SmileyMeh, color: 'bg-amber-400' },
-  { value: 'sad', label: 'Sad', icon: SmileySad, color: 'bg-blue-400' },
-  { value: 'anxious', label: 'Anxious', icon: SmileyNervous, color: 'bg-orange-400' },
-  { value: 'angry', label: 'Angry', icon: SmileyAngry, color: 'bg-red-500' },
-  { value: 'exhausted', label: 'Exhausted', icon: SmileyXEyes, color: 'bg-purple-400' },
-]
+import { PencilLine, Notebook } from '@phosphor-icons/react'
+import { MOOD_LIST } from '@/lib/moods'
+import { entrySchema } from '@/lib/schemas'
 
 export function DashboardPage() {
   const queryClient = useQueryClient()
-  const [content, setContent] = useState('')
-  const [mood, setMood] = useState('')
   const [saved, setSaved] = useState(false)
+
+  const { register, handleSubmit, setValue, reset, control, formState: { errors, isValid } } = useForm({
+    resolver: zodResolver(entrySchema),
+    defaultValues: { content: '', mood: '' },
+  })
+  const mood = useWatch({ control, name: 'mood' })
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['entries'],
@@ -30,8 +28,7 @@ export function DashboardPage() {
     mutationFn: (data) => api.createEntry(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entries'] })
-      setContent('')
-      setMood('')
+      reset()
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     },
@@ -40,15 +37,11 @@ export function DashboardPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => api.deleteEntry(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['entries'] }),
-    onError: () => {
-      // error state displayed below the entries list
-    },
   })
 
-  function handleSubmit(e) {
-    e.preventDefault()
-    if (!content.trim()) return
-    createMutation.mutate({ content: content.trim(), mood })
+  function onSubmit(data) {
+    if (!data.content.trim()) return
+    createMutation.mutate({ content: data.content.trim(), mood: data.mood || null })
   }
 
   return (
@@ -59,23 +52,27 @@ export function DashboardPage() {
           <PencilLine weight="duotone" className="w-5 h-5 text-primary" />
           Today&apos;s Entry
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <textarea
-            placeholder="What's on your mind today?"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={4}
-            className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none text-sm"
-          />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <textarea
+              placeholder="What's on your mind today?"
+              {...register('content')}
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none text-sm"
+            />
+            {errors.content && (
+              <p className="text-sm text-destructive mt-1">{errors.content.message}</p>
+            )}
+          </div>
 
           {/* Mood selector */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted-foreground mr-1">Mood:</span>
-            {moods.map(({ value, label, icon: Icon, color }) => (
+            {MOOD_LIST.map(({ value, label, icon: Icon }) => (
               <button
                 key={value}
                 type="button"
-                onClick={() => setMood(mood === value ? '' : value)}
+                onClick={() => setValue('mood', mood === value ? '' : value, { shouldValidate: true })}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                   mood === value
                     ? 'border-primary bg-primary/10 text-primary'
@@ -91,7 +88,7 @@ export function DashboardPage() {
           <div className="flex items-center gap-3">
             <button
               type="submit"
-              disabled={createMutation.isPending || !content.trim()}
+              disabled={createMutation.isPending || !isValid}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {createMutation.isPending ? (

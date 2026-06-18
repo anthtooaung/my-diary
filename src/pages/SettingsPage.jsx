@@ -1,52 +1,40 @@
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { api } from '@/api'
 import { useAuth } from '@/contexts/AuthContext'
 import { Gear, Key, Download, Warning } from '@phosphor-icons/react'
+import { passwordChangeSchema } from '@/lib/schemas'
 
 export function SettingsPage() {
   const { logout } = useAuth()
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
   const [success, setSuccess] = useState('')
-  const [error, setError] = useState('')
+  const [exportError, setExportError] = useState('')
+
+  const { register, handleSubmit, reset, formState: { errors, isValid } } = useForm({
+    resolver: zodResolver(passwordChangeSchema),
+    defaultValues: { currentPassword: '', newPassword: '', confirm: '' },
+  })
 
   const passwordMutation = useMutation({
     mutationFn: (data) => api.changePassword(data),
     onSuccess: () => {
       setSuccess('Password updated successfully.')
-      setError('')
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirm('')
+      reset()
     },
     onError: (err) => {
-      setError(err.message)
-      setSuccess('')
+      // react-hook-form handles field errors; server errors go here
     },
   })
 
-  function handlePasswordSubmit(e) {
-    e.preventDefault()
+  function onSubmit(data) {
     setSuccess('')
-    setError('')
-    if (!currentPassword || !newPassword) {
-      setError('All fields are required.')
-      return
-    }
-    if (newPassword.length < 4) {
-      setError('New password must be at least 4 characters.')
-      return
-    }
-    if (newPassword !== confirm) {
-      setError('New passwords do not match.')
-      return
-    }
-    passwordMutation.mutate({ currentPassword, newPassword })
+    passwordMutation.mutate({ currentPassword: data.currentPassword, newPassword: data.newPassword })
   }
 
   async function handleExport() {
+    setExportError('')
     try {
       const data = await api.exportData()
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -57,7 +45,7 @@ export function SettingsPage() {
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      setError('Failed to export data.')
+      setExportError('Failed to export data.')
     }
   }
 
@@ -74,39 +62,45 @@ export function SettingsPage() {
           <Key weight="duotone" className="w-4 h-4 text-muted-foreground" />
           Change Password
         </h3>
-        <form onSubmit={handlePasswordSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
           <div>
             <input
               type="password"
               placeholder="Current password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
+              {...register('currentPassword')}
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
             />
+            {errors.currentPassword && (
+              <p className="text-sm text-destructive mt-1">{errors.currentPassword.message}</p>
+            )}
           </div>
           <div>
             <input
               type="password"
               placeholder="New password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              {...register('newPassword')}
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
             />
+            {errors.newPassword && (
+              <p className="text-sm text-destructive mt-1">{errors.newPassword.message}</p>
+            )}
           </div>
           <div>
             <input
               type="password"
               placeholder="Confirm new password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              {...register('confirm')}
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
             />
+            {errors.confirm && (
+              <p className="text-sm text-destructive mt-1">{errors.confirm.message}</p>
+            )}
           </div>
 
-          {error && (
+          {passwordMutation.isError && (
             <p className="text-sm text-destructive flex items-center gap-1.5">
               <Warning weight="fill" className="w-4 h-4" />
-              {error}
+              {passwordMutation.error.message}
             </p>
           )}
           {success && (
@@ -115,7 +109,7 @@ export function SettingsPage() {
 
           <button
             type="submit"
-            disabled={passwordMutation.isPending || !currentPassword.trim() || !newPassword.trim() || !confirm.trim()}
+            disabled={passwordMutation.isPending || !isValid}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {passwordMutation.isPending ? 'Updating…' : 'Update Password'}
@@ -132,6 +126,12 @@ export function SettingsPage() {
         <p className="text-sm text-muted-foreground">
           Download all your diary entries, goals, and settings as a JSON file.
         </p>
+        {exportError && (
+          <p className="text-sm text-destructive flex items-center gap-1.5">
+            <Warning weight="fill" className="w-4 h-4" />
+            {exportError}
+          </p>
+        )}
         <button
           onClick={handleExport}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-accent transition-colors"

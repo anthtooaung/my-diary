@@ -1,23 +1,25 @@
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api'
 import { GoalCard } from '@/components/GoalCard'
 import { EmptyState } from '@/components/EmptyState'
 import { Target, Plus, X } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
-
-const categories = ['weekly', 'monthly', 'yearly']
+import { goalSchema, GOAL_CATEGORIES } from '@/lib/schemas'
 
 export function GoalsPage() {
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState('all')
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
-
-  const [title, setTitle] = useState('')
-  const [category, setCategory] = useState('weekly')
-  const [deadline, setDeadline] = useState('')
   const [saved, setSaved] = useState(false)
+
+  const { register, handleSubmit, reset, formState: { errors, isValid } } = useForm({
+    resolver: zodResolver(goalSchema),
+    defaultValues: { title: '', category: 'weekly', deadline: '' },
+  })
 
   const { data: goals = [], isLoading } = useQuery({
     queryKey: ['goals'],
@@ -28,12 +30,9 @@ export function GoalsPage() {
     mutationFn: (data) => api.createGoal(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] })
-      resetForm()
+      closeForm()
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
-    },
-    onError: () => {
-      // error displayed below form
     },
   })
 
@@ -41,12 +40,9 @@ export function GoalsPage() {
     mutationFn: ({ id, data }) => api.updateGoal(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] })
-      resetForm()
+      closeForm()
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
-    },
-    onError: () => {
-      // error displayed below form
     },
   })
 
@@ -55,19 +51,19 @@ export function GoalsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals'] }),
   })
 
-  function resetForm() {
+  function closeForm() {
     setShowForm(false)
     setEditing(null)
-    setTitle('')
-    setCategory('weekly')
-    setDeadline('')
+    reset()
   }
 
   function handleEdit(goal) {
     setEditing(goal)
-    setTitle(goal.title)
-    setCategory(goal.category)
-    setDeadline(goal.deadline ? goal.deadline.split('T')[0] : '')
+    reset({
+      title: goal.title,
+      category: goal.category,
+      deadline: goal.deadline ? goal.deadline.split('T')[0] : '',
+    })
     setShowForm(true)
   }
 
@@ -78,14 +74,12 @@ export function GoalsPage() {
     })
   }
 
-  function handleSubmit(e) {
-    e.preventDefault()
-    if (!title.trim()) return
-    const data = { title: title.trim(), category, deadline: deadline || null }
+  function onSubmit(data) {
+    const payload = { title: data.title.trim(), category: data.category, deadline: data.deadline || null }
     if (editing) {
-      updateMutation.mutate({ id: editing.id, data })
+      updateMutation.mutate({ id: editing.id, data: payload })
     } else {
-      createMutation.mutate(data)
+      createMutation.mutate(payload)
     }
   }
 
@@ -102,7 +96,7 @@ export function GoalsPage() {
           Goals
         </h2>
         <button
-          onClick={() => { resetForm(); setShowForm(!showForm) }}
+          onClick={() => { closeForm(); setShowForm(!showForm) }}
           className={cn(
             'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors',
             showForm
@@ -126,36 +120,36 @@ export function GoalsPage() {
 
       {/* Goal form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="rounded-xl border border-border bg-card p-5 space-y-4">
           <div>
             <input
               type="text"
               placeholder="What do you want to achieve?"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              {...register('title')}
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
               autoFocus
             />
+            {errors.title && (
+              <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
+            )}
           </div>
           <div className="flex gap-3">
             <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              {...register('category')}
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              {categories.map((c) => (
+              {GOAL_CATEGORIES.map((c) => (
                 <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
               ))}
             </select>
             <input
               type="date"
-              value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
+              {...register('deadline')}
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <button
               type="submit"
-              disabled={createMutation.isPending || updateMutation.isPending || !title.trim()}
+              disabled={createMutation.isPending || updateMutation.isPending || !isValid}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {editing ? 'Update' : 'Create'}
@@ -178,7 +172,7 @@ export function GoalsPage() {
 
       {/* Category filter tabs */}
       <div className="flex gap-1.5">
-        {['all', ...categories].map((c) => (
+        {['all', ...GOAL_CATEGORIES].map((c) => (
           <button
             key={c}
             onClick={() => setFilter(c)}

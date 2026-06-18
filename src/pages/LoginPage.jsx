@@ -1,30 +1,33 @@
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Lock, SignIn } from '@phosphor-icons/react'
 import { useAuth } from '@/contexts/AuthContext'
+import { loginSchema } from '@/lib/schemas'
 
 export function LoginPage() {
   const { isAuthenticated, login } = useAuth()
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [serverError, setServerError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const { register, handleSubmit, formState: { errors, isValid }, watch } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { password: '' },
+  })
+  const password = watch('password')
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!password.trim()) {
-      setError('Please enter your password.')
-      return
-    }
-    setError('')
+  async function onSubmit(data) {
+    setServerError('')
     setSubmitting(true)
     try {
-      await login(password)
+      await login(data.password)
     } catch (err) {
-      setError(err.message || 'Invalid password.')
+      setServerError(err.message || 'Invalid password.')
     } finally {
       setSubmitting(false)
     }
@@ -45,25 +48,27 @@ export function LoginPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <input
               type="password"
               placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              {...register('password')}
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
               autoFocus
             />
+            {errors.password && (
+              <p className="text-sm text-destructive mt-1.5">{errors.password.message}</p>
+            )}
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive font-medium">{error}</p>
+          {serverError && (
+            <p className="text-sm text-destructive font-medium">{serverError}</p>
           )}
 
           <button
             type="submit"
-            disabled={submitting || !password.trim()}
+            disabled={submitting || !isValid}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {submitting ? (
