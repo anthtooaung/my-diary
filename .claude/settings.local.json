@@ -6,5 +6,8 @@
       "Bash(timeout 3 node server.js)",
       "Bash(npx vite *)"
     ]
+  },
+  "enabledPlugins": {
+    "claude-md-management@claude-plugins-official": false
   }
 }
