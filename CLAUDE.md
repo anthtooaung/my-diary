@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Backend**: Express 5 + better-sqlite3 (single-file SQLite at `data/diary.db`)
 - **Auth**: Bearer token, single-user (password in `settings` table, token in `localStorage` as `diary_token`)
 
-> Zustand 5, react-hook-form, and zod are installed but not yet used in the codebase.
+> Zustand 5 (`useDiaryStore` — sidebar state), react-hook-form (all forms), and zod (schemas in `src/lib/schemas.js`) are now integrated and used throughout the codebase.
 
 ## Commands
 ```bash
@@ -54,15 +54,28 @@ import { House } from '@phosphor-icons/react'
 ```
 
 ## Moods
-The six supported moods and their colors are defined in two places (consider consolidating):
-| Value | Color |
-|-------|-------|
-| `happy` | emerald |
-| `neutral` | amber |
-| `sad` | blue |
-| `anxious` | orange |
-| `angry` | red |
-| `exhausted` | purple |
+Centralized in `src/lib/moods.js` — the single source of truth. Exports `MOODS` (object), `MOOD_LIST` (flat array), `POSITIVE_MOODS`, and `getMood(value)` lookup.
+| Value | Color | Icon |
+|-------|-------|------|
+| `happy` | emerald | `Smiley` |
+| `neutral` | amber | `SmileyMeh` |
+| `sad` | blue | `SmileySad` |
+| `anxious` | orange | `SmileyNervous` |
+| `angry` | red | `SmileyAngry` |
+| `exhausted` | purple | `SmileyXEyes` |
+
+## Form Validation
+All forms use **react-hook-form** + **zod** via `@hookform/resolvers`. Schemas are defined in `src/lib/schemas.js`:
+- `loginSchema` — password login form
+- `passwordChangeSchema` — password change with match validation
+- `entrySchema` — diary entry (content + optional mood)
+- `goalSchema` — goal creation/editing (title + category + optional deadline)
+`GOAL_CATEGORIES` (`['weekly', 'monthly', 'yearly']`) is also exported from schemas.
+
+## State Management
+- **Auth**: `useAuth()` from `@/contexts/AuthContext` for token and login/logout
+- **Sidebar / Global UI**: `useDiaryStore` from `@/stores/useDiaryStore` (Zustand) — currently holds `sidebarOpen` + `openSidebar`/`closeSidebar`/`toggleSidebar` actions
+- **Server state**: TanStack Query for all API data (entries, goals, settings)
 
 ## Database
 - `data/diary.db` — auto-created on first server run, gitignored
@@ -93,6 +106,7 @@ The six supported moods and their colors are defined in two places (consider con
 - `knowledges/listToDo.md` — **archived** vanilla JS plan (superseded)
 - `knowledges/project-flow.md` — user journeys and original architecture (some sections outdated)
 - `knowledges/react-migration-plan.md` — migration plan now **complete**; useful for understanding original intent
+- `knowledges/refactor-zod-zustand-mood-centralization.md` — 2026-06-18 refactor details: Zod schemas, mood centralization, Zustand sidebar store
 
 ## Conventions
 - File extension: `.jsx` only (no TypeScript)
