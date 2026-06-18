@@ -55,6 +55,26 @@ Track of completed tasks and architecture changes by date.
 
 ---
 
+---
+
+## 2026-06-19 — Planned: Tier C Features
+
+See `knowledges/feature-ideas.md` for full details.
+
+### Priority Order
+1. **C1 — Stats Page** — mood pie, entries/week bar, word counts, mood heatmap, goal completion rate
+2. **C4 — Writing Prompts** — curated prompt bank, mood-aware, random rotation
+3. **C5 — Rich Text Editor** — markdown editing, preview, auto-save draft
+4. **C2 — AI Goal Coach** — LLM-powered weekly check-in against active goals
+5. **C3 — Year in Review** — full-year aggregate with AI narrative
+
+### Prerequisites
+- [ ] Install charting library (recharts or chart.js)
+- [ ] Research markdown editor library (TipTap, Milkdown, etc.)
+- [ ] Configure LLM API key (needed by C2, C3, and A3)
+
+---
+
 ## 2026-06-17 — Project Initialization (`69a69ad`, `df7354d`)
 
 - [x] Initialized React + Vite project with Tailwind 4

@@ -107,6 +107,8 @@ All forms use **react-hook-form** + **zod** via `@hookform/resolvers`. Schemas a
 - `knowledges/project-flow.md` — user journeys and original architecture (some sections outdated)
 - `knowledges/react-migration-plan.md` — migration plan now **complete**; useful for understanding original intent
 - `knowledges/refactor-zod-zustand-mood-centralization.md` — 2026-06-18 refactor details: Zod schemas, mood centralization, Zustand sidebar store
+- `knowledges/daily-log.md` — running log of completed tasks by date + planned next work
+- `knowledges/feature-ideas.md` — full feature backlog in 3 tiers, with implementation notes
 
 ## Conventions
 - File extension: `.jsx` only (no TypeScript)
