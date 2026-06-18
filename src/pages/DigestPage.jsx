@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api'
 import { EmptyState } from '@/components/EmptyState'
 import { parseDate } from '@/lib/utils'
-import { NewspaperClipping, CaretLeft, CaretRight } from '@phosphor-icons/react'
+import { NewspaperClipping, CaretLeft, CaretRight, WarningOctagon } from '@phosphor-icons/react'
 
 function getWeekRange(date) {
   const d = new Date(date)
@@ -31,7 +31,7 @@ export function DigestPage() {
   baseDate.setDate(baseDate.getDate() + weekOffset * 7)
   const { start, end } = getWeekRange(baseDate)
 
-  const { data: entries = [], isLoading } = useQuery({
+  const { data: entries = [], isLoading, isError } = useQuery({
     queryKey: ['entries', 'digest', toDateStr(start), toDateStr(end)],
     queryFn: () => api.getEntries({ start: toDateStr(start), end: toDateStr(end) }),
   })
@@ -131,6 +131,13 @@ export function DigestPage() {
           <div className="h-3 bg-muted rounded w-full mb-2" />
           <div className="h-3 bg-muted rounded w-5/6 mb-2" />
           <div className="h-3 bg-muted rounded w-2/3" />
+        </div>
+      ) : isError ? (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <p className="text-sm text-destructive flex items-center gap-1.5">
+            <WarningOctagon weight="fill" className="w-4 h-4" />
+            Failed to load entries for this week. Please try again.
+          </p>
         </div>
       ) : !digest ? (
         <EmptyState

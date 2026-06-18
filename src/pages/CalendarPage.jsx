@@ -4,7 +4,7 @@ import { api } from '@/api'
 import { MoodDot } from '@/components/MoodDot'
 import { MoodBadge } from '@/components/MoodBadge'
 import { EmptyState } from '@/components/EmptyState'
-import { CalendarDots, CaretLeft, CaretRight } from '@phosphor-icons/react'
+import { CalendarDots, CaretLeft, CaretRight, WarningOctagon } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
 export function CalendarPage() {
@@ -17,13 +17,13 @@ export function CalendarPage() {
   // Fetch moods for this month
   const start = `${year}-${String(month + 1).padStart(2, '0')}-01`
   const end = `${year}-${String(month + 1).padStart(2, '0')}-31`
-  const { data: moods = [] } = useQuery({
+  const { data: moods = [], isError: moodsError } = useQuery({
     queryKey: ['moods', start, end],
     queryFn: () => api.getMoods({ start, end }),
   })
 
   // Fetch entry for selected date
-  const { data: dayEntry } = useQuery({
+  const { data: dayEntry, isError: dayEntryError } = useQuery({
     queryKey: ['entry', selectedDate],
     queryFn: () => api.getEntries({ date: selectedDate }),
     enabled: !!selectedDate,
@@ -77,6 +77,13 @@ export function CalendarPage() {
         ))}
       </div>
 
+      {moodsError && (
+        <p className="text-sm text-destructive flex items-center gap-1.5 mb-2">
+          <WarningOctagon weight="fill" className="w-4 h-4" />
+          Failed to load moods. Please try refreshing.
+        </p>
+      )}
+
       {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-1">
         {/* Empty cells for offset */}
@@ -121,7 +128,12 @@ export function CalendarPage() {
               year: 'numeric',
             })}
           </h3>
-          {dayEntry ? (
+          {dayEntryError ? (
+            <p className="text-sm text-destructive flex items-center gap-1.5">
+              <WarningOctagon weight="fill" className="w-4 h-4" />
+              Failed to load entry for this day.
+            </p>
+          ) : dayEntry ? (
             <div className="space-y-2">
               {dayEntry.mood && <MoodBadge mood={dayEntry.mood} size="md" />}
               <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">

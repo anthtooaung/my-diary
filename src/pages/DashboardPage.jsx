@@ -37,6 +37,9 @@ export function DashboardPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => api.deleteEntry(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['entries'] }),
+    onError: () => {
+      // error state displayed below the entries list
+    },
   })
 
   function handleSubmit(e) {
@@ -103,6 +106,11 @@ export function DashboardPage() {
       {/* Recent entries */}
       <section>
         <h2 className="text-lg font-bold text-foreground mb-4">Recent Entries</h2>
+        {deleteMutation.isError && (
+          <p className="text-sm text-destructive mb-3 flex items-center gap-1.5">
+            Failed to delete entry. Please try again.
+          </p>
+        )}
         {isLoading ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (

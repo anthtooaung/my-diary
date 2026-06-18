@@ -29,6 +29,9 @@ export function GoalsPage() {
       queryClient.invalidateQueries({ queryKey: ['goals'] })
       resetForm()
     },
+    onError: () => {
+      // error displayed below form
+    },
   })
 
   const updateMutation = useMutation({
@@ -36,6 +39,9 @@ export function GoalsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] })
       resetForm()
+    },
+    onError: () => {
+      // error displayed below form
     },
   })
 
@@ -150,6 +156,13 @@ export function GoalsPage() {
               {editing ? 'Update' : 'Create'}
             </button>
           </div>
+          {(createMutation.isError || updateMutation.isError) && (
+            <p className="text-sm text-destructive flex items-center gap-1.5">
+              {createMutation.isError
+                ? createMutation.error.message
+                : updateMutation.error.message}
+            </p>
+          )}
         </form>
       )}
 
@@ -172,7 +185,13 @@ export function GoalsPage() {
       </div>
 
       {/* Goal list */}
-      {isLoading ? (
+      {deleteMutation.isError && (
+          <p className="text-sm text-destructive flex items-center gap-1.5">
+            Failed to delete goal. Please try again.
+          </p>
+        )}
+
+        {isLoading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="rounded-xl border border-border p-5 animate-pulse">

@@ -4,13 +4,13 @@ import { api } from '@/api'
 import { EmptyState } from '@/components/EmptyState'
 import { MoodBadge } from '@/components/MoodBadge'
 import { parseDate } from '@/lib/utils'
-import { MagnifyingGlass } from '@phosphor-icons/react'
+import { MagnifyingGlass, WarningOctagon } from '@phosphor-icons/react'
 
 export function SearchPage() {
   const [query, setQuery] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const { data: results = [], isLoading } = useQuery({
+  const { data: results = [], isLoading, isError } = useQuery({
     queryKey: ['search', searchQuery],
     queryFn: () => api.getEntries({ q: searchQuery }),
     enabled: searchQuery.length > 0,
@@ -72,11 +72,18 @@ export function SearchPage() {
       {/* Results */}
       {searchQuery && (
         <div>
-          <p className="text-xs text-muted-foreground mb-4">
-            {isLoading
-              ? 'Searching…'
-              : `${highlighted.length} result${highlighted.length !== 1 ? 's' : ''} for "${searchQuery}"`}
-          </p>
+          {isError ? (
+            <p className="text-sm text-destructive flex items-center gap-1.5 mb-2">
+              <WarningOctagon weight="fill" className="w-4 h-4" />
+              Search failed. Please try again.
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground mb-4">
+              {isLoading
+                ? 'Searching…'
+                : `${highlighted.length} result${highlighted.length !== 1 ? 's' : ''} for "${searchQuery}"`}
+            </p>
+          )}
 
           {isLoading ? (
             <div className="space-y-3">
@@ -86,6 +93,12 @@ export function SearchPage() {
                   <div className="h-3 bg-muted rounded w-1/2" />
                 </div>
               ))}
+            </div>
+          ) : isError ? (
+            <div className="rounded-xl border border-border bg-card p-5">
+              <p className="text-sm text-muted-foreground">
+                Something went wrong while searching. Check your connection and retry.
+              </p>
             </div>
           ) : highlighted.length === 0 ? (
             <EmptyState
