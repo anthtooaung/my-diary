@@ -24,7 +24,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     content TEXT NOT NULL,
     mood TEXT,
-    created_at TEXT DEFAULT (datetime('now'))
+    created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
   );
 
   CREATE TABLE IF NOT EXISTS goals (
@@ -33,7 +33,7 @@ db.exec(`
     category TEXT NOT NULL DEFAULT 'weekly',
     deadline TEXT,
     status TEXT NOT NULL DEFAULT 'active',
-    created_at TEXT DEFAULT (datetime('now'))
+    created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
   );
 
   CREATE TABLE IF NOT EXISTS settings (
@@ -47,6 +47,10 @@ const existing = db.prepare('SELECT value FROM settings WHERE key = ?').get('pas
 if (!existing) {
   db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('password', 'admin')
 }
+
+// Migrate existing date formats to ISO 8601 (space → T separator)
+db.prepare("UPDATE entries SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at NOT LIKE '%T%'").run()
+db.prepare("UPDATE goals SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at NOT LIKE '%T%'").run()
 
 // ── Middleware ────────────────────────────────────────────────────────────
 const app = express()
@@ -156,9 +160,17 @@ app.put('/api/entries/:id', auth, (req, res) => {
   }
 
   const { content, mood } = req.body
+  if (content !== undefined && (!content || !content.trim())) {
+    return res.status(400).json({ error: 'Content cannot be empty' })
+  }
+
   db.prepare(
     'UPDATE entries SET content = ?, mood = ? WHERE id = ?'
-  ).run(content ?? entry.content, mood !== undefined ? mood : entry.mood, req.params.id)
+  ).run(
+    content !== undefined ? content.trim() : entry.content,
+    mood !== undefined ? mood : entry.mood,
+    req.params.id,
+  )
 
   const updated = db.prepare('SELECT * FROM entries WHERE id = ?').get(req.params.id)
   res.json(updated)

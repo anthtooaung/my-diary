@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api'
 import { EmptyState } from '@/components/EmptyState'
+import { parseDate } from '@/lib/utils'
 import { NewspaperClipping, CaretLeft, CaretRight } from '@phosphor-icons/react'
 
 function getWeekRange(date) {
@@ -205,7 +206,7 @@ export function DigestPage() {
               "{digest.highlight.content.slice(0, 200)}{digest.highlight.content.length > 200 ? '…' : ''}"
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              {new Date(digest.highlight.created_at).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+              {parseDate(digest.highlight.created_at).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
             </p>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api'
 import { EmptyState } from '@/components/EmptyState'
 import { MoodBadge } from '@/components/MoodBadge'
+import { parseDate } from '@/lib/utils'
 import { MagnifyingGlass } from '@phosphor-icons/react'
 
 export function SearchPage() {
@@ -98,7 +99,7 @@ export function SearchPage() {
                 <article key={entry.id} className="rounded-xl border border-border bg-card p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xs text-muted-foreground">
-                      {new Date(entry.created_at).toLocaleDateString('en-US', {
+                      {parseDate(entry.created_at).toLocaleDateString('en-US', {
                         weekday: 'short',
                         month: 'short',
                         day: 'numeric',

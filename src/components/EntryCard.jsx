@@ -1,8 +1,9 @@
 import { Trash } from '@phosphor-icons/react'
 import { MoodBadge } from '@/components/MoodBadge'
+import { parseDate } from '@/lib/utils'
 
 export function EntryCard({ entry, onDelete }) {
-  const date = new Date(entry.created_at)
+  const date = parseDate(entry.created_at)
   const formatted = date.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
