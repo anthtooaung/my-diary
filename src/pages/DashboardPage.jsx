@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api'
 import { EntryCard } from '@/components/EntryCard'
 import { EmptyState } from '@/components/EmptyState'
+import { WritingPromptCard } from '@/components/WritingPromptCard'
 import { PencilLine, Notebook } from '@phosphor-icons/react'
 import { MOOD_LIST } from '@/lib/moods'
 import { entrySchema } from '@/lib/schemas'
@@ -52,6 +53,7 @@ export function DashboardPage() {
           <PencilLine weight="duotone" className="w-5 h-5 text-primary" />
           Today&apos;s Entry
         </h2>
+        <WritingPromptCard lastMood={entries[0]?.mood ?? null} />
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <textarea

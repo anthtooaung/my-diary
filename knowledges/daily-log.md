@@ -73,7 +73,7 @@ Track of completed tasks and architecture changes by date.
 - **Data pattern**: Client-side aggregation is viable for single-user scale — all entries/goals/moods fetched once
 
 ### Remaining Tier C (in priority order)
-1. **C4 — Writing Prompts** — curated prompt bank, mood-aware, random rotation
+1. ~~**C4 — Writing Prompts**~~ ✅ **DONE** — see below
 2. **C5 — Rich Text Editor** — markdown editing, preview, auto-save draft
 3. **C2 — AI Goal Coach** — LLM-powered weekly check-in against active goals
 4. **C3 — Year in Review** — full-year aggregate with AI narrative
@@ -82,6 +82,20 @@ Track of completed tasks and architecture changes by date.
 - [x] ~~Install charting library~~ → recharts installed
 - [ ] Research markdown editor library (TipTap, Milkdown, etc.)
 - [ ] Configure LLM API key (needed by C2, C3, and A3)
+
+---
+
+## 2026-06-19 — C4 Writing Prompts
+
+### Done
+- [x] Create `src/lib/prompts.js` — 52 curated prompts organized by mood (happy/neutral/sad/anxious/angry/exhausted), time (morning/evening), and general categories
+- [x] Create `WritingPromptCard.jsx` — card with mood/time-weighted random prompt selection + shuffle button
+- [x] Integrate into `DashboardPage.jsx` above the entry form, reading last entry's mood
+
+### Architecture State After
+- **Prompt bank**: `src/lib/prompts.js` — exports `PROMPTS`, `getPrompts()`, `randomPrompt()`, `pickPrompt()`
+- **Writing prompt card**: `src/components/WritingPromptCard.jsx` — receives `lastMood`, uses `pickPrompt()` for weighted selection
+- **Dashboard**: now shows prompt card between heading and form; shuffles on click
 
 ---
 

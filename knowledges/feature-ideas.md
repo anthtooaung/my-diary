@@ -143,7 +143,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
   - Beautiful single-page layout (like a year-end card)
   - Could be exportable as image/PDF
 
-### C4 — Writing Prompts
+### C4 — Writing Prompts ✅ DONE (June 19, 2026)
 - **What**: On days you feel stuck, get a question prompt
 - **Behavior**:
   - "What's one thing that surprised you today?"
@@ -176,7 +176,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
 ### Focus: Tier C
 
 1. ~~**C1 — Stats Page**~~ ✅ **DONE** — see `knowledges/daily-log.md` for changelog
-2. **C4 — Writing Prompts** (quick win, enriches daily writing habit)
+2. ~~**C4 — Writing Prompts**~~ ✅ **DONE** — 52 prompts, mood/time-aware selection, shuffle
 3. **C5 — Rich Text Editor** (upgrades the core writing experience)
 4. **C2 — AI Goal Coach** (if LLM API is set up)
 5. **C3 — Year in Review** (biggest scope, save for last or when data is richer)
