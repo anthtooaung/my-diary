@@ -74,13 +74,13 @@ Track of completed tasks and architecture changes by date.
 
 ### Remaining Tier C (in priority order)
 1. ~~**C4 — Writing Prompts**~~ ✅ **DONE** — see below
-2. **C5 — Rich Text Editor** — markdown editing, preview, auto-save draft
+2. ~~**C5 — Rich Text Editor**~~ ✅ **DONE** — see below
 3. **C2 — AI Goal Coach** — LLM-powered weekly check-in against active goals
 4. **C3 — Year in Review** — full-year aggregate with AI narrative
 
 ### Prerequisites Remaining
 - [x] ~~Install charting library~~ → recharts installed
-- [ ] Research markdown editor library (TipTap, Milkdown, etc.)
+- [x] ~~Research markdown editor library~~ → react-markdown + remark-gfm (lightweight, safe rendering)
 - [ ] Configure LLM API key (needed by C2, C3, and A3)
 
 ---
@@ -99,7 +99,27 @@ Track of completed tasks and architecture changes by date.
 
 ---
 
-## 2026-06-17 — Project Initialization (`69a69ad`, `df7354d`)
+## 2026-06-19 — C5 Rich Text / Markdown Editor
+
+### Done
+- [x] Install react-markdown + remark-gfm for safe, GFM-capable markdown rendering
+- [x] Create `MarkdownContent.jsx` — reusable renderer with prose-like Tailwind styling (lists, blockquotes, code, tables, etc.)
+- [x] Create `MarkdownToolbar.jsx` — Bold/Italic/List/Link/Quote buttons that insert markdown syntax at cursor + Write/Preview toggle tabs
+- [x] Create `useAutoSave.js` hook — debounced (1s) localStorage draft save and restore with `clearDraft()`
+- [x] Update `EntryCard.jsx`, `CalendarPage.jsx`, `DigestPage.jsx` to render entry content through `<MarkdownContent>`
+- [x] Update `SearchPage.jsx` — strip markdown formatting chars before snippet extraction + `<mark>` highlighting
+- [x] Update `DashboardPage.jsx` — integrate toolbar, Write/Preview mode toggle, auto-save draft with "Draft restored" indicator, `font-mono` textarea
+- [x] **No server changes** — markdown stored in existing `content` column, backward compatible with plain text entries
+
+### Architecture State After
+- **Markdown rendering**: `src/components/MarkdownContent.jsx` — wraps react-markdown + remark-gfm with consistent prose styling
+- **Markdown editing**: `src/components/MarkdownToolbar.jsx` — 5 formatting buttons + Write/Preview toggle, manipulates textarea via ref
+- **Draft system**: `src/hooks/useAutoSave.js` — localStorage-based, debounced, handles restore and clear
+- **Entry form**: DashboardPage now has toolbar above textarea, Preview tab renders live markdown preview, draft auto-saves
+- **All display locations**: EntryCard, CalendarPage day detail, DigestPage highlight, and Dashboard Preview all render through MarkdownContent
+- **SearchPage**: strips markdown before highlighting — snippets remain clean plain text
+
+---
 
 - [x] Initialized React + Vite project with Tailwind 4
 - [x] Express backend with better-sqlite3

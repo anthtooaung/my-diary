@@ -1,5 +1,6 @@
 import { Trash } from '@phosphor-icons/react'
 import { MoodBadge } from '@/components/MoodBadge'
+import { MarkdownContent } from '@/components/MarkdownContent'
 import { parseDate } from '@/lib/utils'
 
 export function EntryCard({ entry, onDelete }) {
@@ -34,9 +35,7 @@ export function EntryCard({ entry, onDelete }) {
           </button>
         </div>
       </div>
-      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-        {entry.content}
-      </p>
+      <MarkdownContent>{entry.content}</MarkdownContent>
     </article>
   )
 }

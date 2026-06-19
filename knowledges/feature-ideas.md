@@ -157,17 +157,16 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
   - Prompt rotation or random selection
   - Optional AI-generated prompts based on recent entries
 
-### C5 — Rich Text / Markdown Editor
+### C5 — Rich Text / Markdown Editor ✅ DONE (June 19, 2026)
 - **What**: Write more expressive entries with formatting
-- **Behavior**:
-  - Bold, italic, lists, links, blockquotes
-  - Preview mode
-  - Auto-save draft
-- **Needs**:
-  - Replace `<textarea>` with a markdown editor (TipTap, Milkdown, or simple textarea + preview)
-  - Store markdown in DB (current entries already store plain text — backward compatible)
-  - Render markdown safely on EntryCard (marked + DOMPurify or react-markdown)
-  - Toolbar or slash-commands for formatting
+- **Implemented**:
+  - Toolbar with Bold/Italic/List/Link/Quote buttons (inserts markdown at cursor)
+  - Write/Preview toggle tabs (live preview via react-markdown)
+  - Auto-save draft to localStorage (debounced 1s, restored on mount with indicator)
+  - `<MarkdownContent>` renders all entries everywhere (EntryCard, Calendar, Digest, Dashboard preview)
+  - SearchPage strips markdown before snippet highlighting
+  - Textarea uses `font-mono` for better markdown editing feel
+  - **Zero server changes** — markdown in existing `content` column, plain text is backward compatible
 
 ---
 
@@ -177,11 +176,11 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
 
 1. ~~**C1 — Stats Page**~~ ✅ **DONE** — see `knowledges/daily-log.md` for changelog
 2. ~~**C4 — Writing Prompts**~~ ✅ **DONE** — 52 prompts, mood/time-aware selection, shuffle
-3. **C5 — Rich Text Editor** (upgrades the core writing experience)
+3. ~~**C5 — Rich Text Editor**~~ ✅ **DONE** — markdown toolbar, preview, auto-save draft
 4. **C2 — AI Goal Coach** (if LLM API is set up)
 5. **C3 — Year in Review** (biggest scope, save for last or when data is richer)
 
 Prerequisites across Tier C:
 - ~~**Charting library**: needed by C1, C3 → install recharts or chart.js early~~ ✅ recharts installed
+- ~~**Markdown editor**: needed by C5 → research library, affects core entry form~~ ✅ react-markdown + remark-gfm
 - **LLM API key**: needed by C2, C3, and A3 → configure once, reusable across features
-- **Markdown editor**: needed by C5 → research library, affects core entry form

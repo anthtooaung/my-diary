@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api'
 import { MoodDot } from '@/components/MoodDot'
 import { MoodBadge } from '@/components/MoodBadge'
+import { MarkdownContent } from '@/components/MarkdownContent'
 import { EmptyState } from '@/components/EmptyState'
 import { CalendarDots, CaretLeft, CaretRight, WarningOctagon } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
@@ -137,9 +138,7 @@ export function CalendarPage() {
           ) : dayEntry ? (
             <div className="space-y-2">
               {dayEntry.mood && <MoodBadge mood={dayEntry.mood} size="md" />}
-              <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                {dayEntry.content}
-              </p>
+              <MarkdownContent>{dayEntry.content}</MarkdownContent>
             </div>
           ) : (
             <EmptyState

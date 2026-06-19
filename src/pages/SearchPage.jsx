@@ -6,6 +6,18 @@ import { MoodBadge } from '@/components/MoodBadge'
 import { parseDate } from '@/lib/utils'
 import { MagnifyingGlass, WarningOctagon } from '@phosphor-icons/react'
 
+function stripMarkdown(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')        // bold
+    .replace(/\*(.+?)\*/g, '$1')             // italic
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')      // links
+    .replace(/^[-*]\s/gm, '')                // list markers
+    .replace(/^>\s/gm, '')                   // blockquote
+    .replace(/^#{1,6}\s/gm, '')              // headings
+    .replace(/`(.+?)`/g, '$1')               // inline code
+    .replace(/~~(.+?)~~/g, '$1')             // strikethrough
+}
+
 export function SearchPage() {
   const [query, setQuery] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -23,7 +35,7 @@ export function SearchPage() {
     const CONTEXT = 60
 
     return results.map((entry) => {
-      const original = entry.content
+      const original = stripMarkdown(entry.content)
       const lower = original.toLowerCase()
 
       // Find all match positions in the original content

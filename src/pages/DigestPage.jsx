@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api'
+import { MarkdownContent } from '@/components/MarkdownContent'
 import { EmptyState } from '@/components/EmptyState'
 import { parseDate } from '@/lib/utils'
 import { NewspaperClipping, CaretLeft, CaretRight, WarningOctagon, TrendUp, TrendDown } from '@phosphor-icons/react'
@@ -209,9 +210,11 @@ export function DigestPage() {
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               Highlight
             </h3>
-            <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed bg-muted/50 rounded-lg p-3 italic">
-              "{digest.highlight.content.slice(0, 200)}{digest.highlight.content.length > 200 ? '…' : ''}"
-            </p>
+            <div className="bg-muted/50 rounded-lg p-3 italic">
+              <MarkdownContent>
+                {digest.highlight.content.slice(0, 200) + (digest.highlight.content.length > 200 ? '…' : '')}
+              </MarkdownContent>
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               {parseDate(digest.highlight.created_at).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
             </p>

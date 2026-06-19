@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -6,19 +6,42 @@ import { api } from '@/api'
 import { EntryCard } from '@/components/EntryCard'
 import { EmptyState } from '@/components/EmptyState'
 import { WritingPromptCard } from '@/components/WritingPromptCard'
-import { PencilLine, Notebook } from '@phosphor-icons/react'
+import { MarkdownToolbar } from '@/components/MarkdownToolbar'
+import { MarkdownContent } from '@/components/MarkdownContent'
+import { useAutoSave } from '@/hooks/useAutoSave'
+import { PencilLine, Notebook, FloppyDiskBack } from '@phosphor-icons/react'
 import { MOOD_LIST } from '@/lib/moods'
 import { entrySchema } from '@/lib/schemas'
 
 export function DashboardPage() {
   const queryClient = useQueryClient()
   const [saved, setSaved] = useState(false)
+  const [mode, setMode] = useState('write')
+  const textareaRef = useRef(null)
 
   const { register, handleSubmit, setValue, reset, control, formState: { errors, isValid } } = useForm({
     resolver: zodResolver(entrySchema),
     defaultValues: { content: '', mood: '' },
   })
   const mood = useWatch({ control, name: 'mood' })
+  const content = useWatch({ control, name: 'content' })
+
+  // Auto-save draft
+  const { draft, clearDraft } = useAutoSave(
+    { content, mood },
+    !!(content || mood),
+  )
+
+  const [draftRestored, setDraftRestored] = useState(false)
+
+  // Restore draft on mount
+  useEffect(() => {
+    if (draft) {
+      reset({ content: draft.content || '', mood: draft.mood || '' })
+      setDraftRestored(true)
+      setTimeout(() => setDraftRestored(false), 3000)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['entries'],
@@ -30,6 +53,8 @@ export function DashboardPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entries'] })
       reset()
+      clearDraft()
+      setMode('write')
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     },
@@ -55,15 +80,38 @@ export function DashboardPage() {
         </h2>
         <WritingPromptCard lastMood={entries[0]?.mood ?? null} />
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <MarkdownToolbar textareaRef={textareaRef} mode={mode} onModeChange={setMode} />
           <div>
-            <textarea
-              placeholder="What's on your mind today?"
-              {...register('content')}
-              rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none text-sm"
-            />
+            {mode === 'write' ? (
+              <textarea
+                placeholder="What's on your mind today? You can use **bold**, *italic*, - lists, > quotes, and [links](url)."
+                rows={5}
+                className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none text-sm font-mono"
+                ref={(el) => {
+                  textareaRef.current = el
+                  register('content').ref(el)
+                }}
+                onChange={register('content').onChange}
+                onBlur={register('content').onBlur}
+                name={register('content').name}
+              />
+            ) : (
+              <div className="w-full min-h-[140px] px-4 py-3 rounded-xl border border-border bg-card">
+                {content ? (
+                  <MarkdownContent>{content}</MarkdownContent>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">Nothing to preview yet…</p>
+                )}
+              </div>
+            )}
             {errors.content && (
               <p className="text-sm text-destructive mt-1">{errors.content.message}</p>
+            )}
+            {draftRestored && (
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                <FloppyDiskBack weight="fill" className="w-3.5 h-3.5" />
+                Draft restored
+              </p>
             )}
           </div>
 
