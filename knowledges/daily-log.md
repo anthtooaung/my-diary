@@ -75,13 +75,15 @@ Track of completed tasks and architecture changes by date.
 ### Remaining Tier C (in priority order)
 1. ~~**C4 — Writing Prompts**~~ ✅ **DONE** — see below
 2. ~~**C5 — Rich Text Editor**~~ ✅ **DONE** — see below
-3. **C2 — AI Goal Coach** — LLM-powered weekly check-in against active goals
-4. **C3 — Year in Review** — full-year aggregate with AI narrative
+3. ~~**C2 — AI Goal Coach**~~ ✅ **DONE** — see below
+4. ~~**C3 — Year in Review**~~ ✅ **DONE** — see below
+
+### 🎉 All Tier C Features Complete 🎉
 
 ### Prerequisites Remaining
 - [x] ~~Install charting library~~ → recharts installed
-- [x] ~~Research markdown editor library~~ → react-markdown + remark-gfm (lightweight, safe rendering)
-- [ ] Configure LLM API key (needed by C2, C3, and A3)
+- [x] ~~Research markdown editor library~~ → react-markdown + remark-gfm
+- [x] ~~Configure LLM API key~~ → OpenAI key stored in DB, managed via Settings UI
 
 ---
 
@@ -121,7 +123,34 @@ Track of completed tasks and architecture changes by date.
 
 ---
 
-- [x] Initialized React + Vite project with Tailwind 4
+## 2026-06-19 — C2 AI Goal Coach & C3 Year in Review
+
+### Done
+- [x] Install `openai` npm package for server-side OpenAI API
+- [x] Add `PUT /api/settings/ai-key` — store OpenAI API key in DB
+- [x] Add `POST /api/ai/coach` — GPT-4o-mini reviews last 7 days of entries + goals, returns coaching report
+- [x] Add `POST /api/ai/year-review` — GPT-4o-mini generates markdown year-in-review narrative
+- [x] Add shared `callOpenAI()` server helper with API key check
+- [x] Add `aiKeySchema` with `sk-` prefix validation
+- [x] Add AI Integration section to SettingsPage — input + save button for OpenAI key
+- [x] Add "Coach Me" button to GoalsPage with CoachReport component and loading/error states
+- [x] Create `YearReviewPage.jsx` — year picker, generate button, markdown review display
+- [x] Add `/year-review` route and `CalendarCheck` sidebar nav link
+
+### Architecture State After
+- **AI stack**: `openai` (server-side only), `gpt-4o-mini` model, API key in `settings` table
+- **Coach**: `CoachReport.jsx` component on GoalsPage — one-click, shows compassionate 3-4 paragraph report
+- **Year Review**: new `YearReviewPage.jsx` with year picker, AI generates markdown rendered via `MarkdownContent`
+- **Settings**: API key section with masked input, `sk-` validation, "Save API Key" mutation
+- **Sidebar**: 9 nav items now (Dashboard, Calendar, Goals, Digest, Search, Stats, Year Review, Settings)
+- **server.js**: 3 new endpoints + `callOpenAI()` helper (111 lines of new server code)
+
+### AI Prompt Design
+- **Coach**: Compassionate life coach persona, plain text output, 3-4 paragraphs (opening + goal check + suggestion + closing)
+- **Year Review**: Narrative storyteller persona, markdown output with 5 sections (By the Numbers, Emotional Landscape, Moments, Goals & Growth, A Look Ahead)
+- Content truncated to 600 chars per entry + 7-day window to stay within gpt-4o-mini context
+
+---
 - [x] Express backend with better-sqlite3
 - [x] Set up project structure, shadcn/ui theme, routing
 - [x] Configured MCP servers (context7, claude-mem)

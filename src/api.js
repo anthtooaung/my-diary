@@ -125,4 +125,23 @@ export const api = {
   exportData() {
     return request('/export')
   },
+
+  // AI
+  setAIKey(apiKey) {
+    return request('/settings/ai-key', {
+      method: 'PUT',
+      body: JSON.stringify({ apiKey }),
+    })
+  },
+
+  getAICoach() {
+    return request('/ai/coach', { method: 'POST' })
+  },
+
+  getYearReview(year) {
+    return request('/ai/year-review', {
+      method: 'POST',
+      body: JSON.stringify({ year }),
+    })
+  },
 }

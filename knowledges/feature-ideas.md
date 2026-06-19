@@ -117,31 +117,24 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
   - Aggregation queries on server or client-side from full entry data
   - Sidebar nav link with icon
 
-### C2 — AI Goal Coach
+### C2 — AI Goal Coach ✅ DONE (June 19, 2026)
 - **What**: Weekly automated check-in that reads your entries against your goals
-- **Behavior**:
-  - "You set a goal to run 3 times this week. Your diary mentions running twice. Did you skip one or forget to log it?"
-  - "You seemed stressed this week — how is that affecting your monthly goal?"
-  - Suggests goal adjustments: "You've had this goal for 3 weeks with no progress. Maybe make it smaller?"
-- **Needs**:
-  - LLM integration (shared with A3)
-  - Cron-like trigger or manual "Coach Me" button on GoalsPage
-  - Cross-reference: entries mentioning goal-related keywords × goal status
-  - Conversational interface or generated report card
+- **Implemented**:
+  - "Coach Me" button on GoalsPage with `CoachReport` card display
+  - GPT-4o-mini reviews last 7 days of entries + all goals
+  - 4-paragraph report: opening, goal check, suggestion, closing
+  - Loads key from `settings` table, handled server-side via `openai` npm package
+  - Error states for missing API key and API failures
 
-### C3 — Year in Review
-- **What**: At year-end or on-demand: "Your 2026 in moods, words, and moments"
-- **Behavior**:
-  - "This year you wrote X entries, totalling Y words."
-  - "Your dominant mood was ____, appearing on __% of days."
-  - "Your best month was ____ (highest happy count)."
-  - "Top 3 most memorable entries:" (picks based on word count, sentiment, or self-selected pins)
-  - AI-generated: "Your 2026 story" — narrative summary of the year
-- **Needs**:
-  - Aggregation across entire dataset
-  - Optional LLM for narrative generation
-  - Beautiful single-page layout (like a year-end card)
-  - Could be exportable as image/PDF
+### C3 — Year in Review ✅ DONE (June 19, 2026)
+- **What**: "Your 2026 in moods, words, and moments" — AI-generated narrative
+- **Implemented**:
+  - New `YearReviewPage.jsx` with year picker (auto-detects years from entries)
+  - "Generate Review" button sends year's entries to GPT-4o-mini
+  - AI returns markdown with 5 sections (By the Numbers, Emotional Landscape, Moments, Goals, A Look Ahead)
+  - Rendered via existing `MarkdownContent` component
+  - Pre-computes entry count, word count, dominant mood for AI prompt context
+  - Content truncated to 600 chars per entry to stay within model context
 
 ### C4 — Writing Prompts ✅ DONE (June 19, 2026)
 - **What**: On days you feel stuck, get a question prompt
@@ -174,13 +167,15 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
 
 ### Focus: Tier C
 
-1. ~~**C1 — Stats Page**~~ ✅ **DONE** — see `knowledges/daily-log.md` for changelog
+1. ~~**C1 — Stats Page**~~ ✅ **DONE** — 6 chart sections, all client-side
 2. ~~**C4 — Writing Prompts**~~ ✅ **DONE** — 52 prompts, mood/time-aware selection, shuffle
 3. ~~**C5 — Rich Text Editor**~~ ✅ **DONE** — markdown toolbar, preview, auto-save draft
-4. **C2 — AI Goal Coach** (if LLM API is set up)
-5. **C3 — Year in Review** (biggest scope, save for last or when data is richer)
+4. ~~**C2 — AI Goal Coach**~~ ✅ **DONE** — Coach Me button, GPT-4o-mini report
+5. ~~**C3 — Year in Review**~~ ✅ **DONE** — year picker, AI-generated markdown narrative
+
+### 🎉 All Tier C Features Complete — June 19, 2026 🎉
 
 Prerequisites across Tier C:
 - ~~**Charting library**: needed by C1, C3 → install recharts or chart.js early~~ ✅ recharts installed
 - ~~**Markdown editor**: needed by C5 → research library, affects core entry form~~ ✅ react-markdown + remark-gfm
-- **LLM API key**: needed by C2, C3, and A3 → configure once, reusable across features
+- ~~**LLM API key**: needed by C2, C3, and A3 → configure once, reusable across features~~ ✅ OpenAI key stored in DB, Settings UI

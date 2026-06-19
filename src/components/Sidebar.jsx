@@ -6,6 +6,7 @@ import {
   NewspaperClipping,
   MagnifyingGlass,
   ChartBar,
+  CalendarCheck,
   Gear,
   SignOut,
 } from '@phosphor-icons/react'
@@ -20,6 +21,7 @@ const links = [
   { to: '/digest', label: 'Digest', icon: NewspaperClipping },
   { to: '/search', label: 'Search', icon: MagnifyingGlass },
   { to: '/stats', label: 'Stats', icon: ChartBar },
+  { to: '/year-review', label: 'Year Review', icon: CalendarCheck },
   { to: '/settings', label: 'Settings', icon: Gear },
 ]
 

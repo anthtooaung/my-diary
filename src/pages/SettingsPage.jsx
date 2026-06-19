@@ -4,17 +4,23 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { api } from '@/api'
 import { useAuth } from '@/contexts/AuthContext'
-import { Gear, Key, Download, Warning } from '@phosphor-icons/react'
-import { passwordChangeSchema } from '@/lib/schemas'
+import { Gear, Key, Download, Warning, Robot } from '@phosphor-icons/react'
+import { passwordChangeSchema, aiKeySchema } from '@/lib/schemas'
 
 export function SettingsPage() {
   const { logout } = useAuth()
   const [success, setSuccess] = useState('')
   const [exportError, setExportError] = useState('')
+  const [aiSuccess, setAiSuccess] = useState('')
 
   const { register, handleSubmit, reset, formState: { errors, isValid } } = useForm({
     resolver: zodResolver(passwordChangeSchema),
     defaultValues: { currentPassword: '', newPassword: '', confirm: '' },
+  })
+
+  const { register: registerAi, handleSubmit: handleAiSubmit, reset: resetAi, formState: { errors: aiErrors, isValid: aiValid } } = useForm({
+    resolver: zodResolver(aiKeySchema),
+    defaultValues: { apiKey: '' },
   })
 
   const passwordMutation = useMutation({
@@ -28,9 +34,23 @@ export function SettingsPage() {
     },
   })
 
+  const aiKeyMutation = useMutation({
+    mutationFn: (data) => api.setAIKey(data.apiKey),
+    onSuccess: () => {
+      setAiSuccess('API key saved.')
+      resetAi()
+      setTimeout(() => setAiSuccess(''), 3000)
+    },
+  })
+
   function onSubmit(data) {
     setSuccess('')
     passwordMutation.mutate({ currentPassword: data.currentPassword, newPassword: data.newPassword })
+  }
+
+  function onAiSubmit(data) {
+    setAiSuccess('')
+    aiKeyMutation.mutate(data)
   }
 
   async function handleExport() {
@@ -113,6 +133,49 @@ export function SettingsPage() {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {passwordMutation.isPending ? 'Updating…' : 'Update Password'}
+          </button>
+        </form>
+      </section>
+
+      {/* AI API key */}
+      <section className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Robot weight="duotone" className="w-4 h-4 text-muted-foreground" />
+          AI Integration
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Provide your OpenAI API key to enable the AI Goal Coach, Year in Review, and AI Digest features.
+          Your key is stored in the database and never sent to the browser.
+        </p>
+        <form onSubmit={handleAiSubmit(onAiSubmit)} className="space-y-3">
+          <div>
+            <input
+              type="password"
+              placeholder="sk-…"
+              {...registerAi('apiKey')}
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm font-mono"
+            />
+            {aiErrors.apiKey && (
+              <p className="text-sm text-destructive mt-1">{aiErrors.apiKey.message}</p>
+            )}
+          </div>
+
+          {aiKeyMutation.isError && (
+            <p className="text-sm text-destructive flex items-center gap-1.5">
+              <Warning weight="fill" className="w-4 h-4" />
+              {aiKeyMutation.error.message}
+            </p>
+          )}
+          {aiSuccess && (
+            <p className="text-sm text-emerald-500 font-medium">{aiSuccess}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={aiKeyMutation.isPending || !aiValid}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {aiKeyMutation.isPending ? 'Saving…' : 'Save API Key'}
           </button>
         </form>
       </section>

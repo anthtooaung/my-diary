@@ -28,3 +28,11 @@ export const goalSchema = z.object({
 })
 
 export const GOAL_CATEGORIES = ['weekly', 'monthly', 'yearly']
+
+export const aiKeySchema = z.object({
+  apiKey: z.string()
+    .min(1, 'API key is required.')
+    .refine((val) => val.startsWith('sk-'), {
+      message: 'API key should start with "sk-".',
+    }),
+})

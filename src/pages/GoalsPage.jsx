@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api'
 import { GoalCard } from '@/components/GoalCard'
 import { EmptyState } from '@/components/EmptyState'
-import { Target, Plus, X } from '@phosphor-icons/react'
+import { Target, Plus, X, Robot } from '@phosphor-icons/react'
+import { CoachReport } from '@/components/CoachReport'
 import { cn } from '@/lib/utils'
 import { goalSchema, GOAL_CATEGORIES } from '@/lib/schemas'
 
@@ -49,6 +50,10 @@ export function GoalsPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => api.deleteGoal(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals'] }),
+  })
+
+  const coachMutation = useMutation({
+    mutationFn: () => api.getAICoach(),
   })
 
   function closeForm() {
@@ -95,28 +100,67 @@ export function GoalsPage() {
           <Target weight="duotone" className="w-5 h-5 text-primary" />
           Goals
         </h2>
-        <button
-          onClick={() => { closeForm(); setShowForm(!showForm) }}
-          className={cn(
-            'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors',
-            showForm
-              ? 'bg-destructive/10 text-destructive'
-              : 'bg-primary text-primary-foreground hover:opacity-90',
-          )}
-        >
-          {showForm ? (
-            <>
-              <X weight="bold" className="w-4 h-4" />
-              Cancel
-            </>
-          ) : (
-            <>
-              <Plus weight="bold" className="w-4 h-4" />
-              New Goal
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => coachMutation.mutate()}
+            disabled={coachMutation.isPending}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium border border-border text-foreground hover:bg-accent transition-colors disabled:opacity-50"
+          >
+            {coachMutation.isPending ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+            ) : (
+              <Robot weight="bold" className="w-4 h-4" />
+            )}
+            {coachMutation.isPending ? 'Coaching…' : 'Coach Me'}
+          </button>
+          <button
+            onClick={() => { closeForm(); setShowForm(!showForm) }}
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors',
+              showForm
+                ? 'bg-destructive/10 text-destructive'
+                : 'bg-primary text-primary-foreground hover:opacity-90',
+            )}
+          >
+            {showForm ? (
+              <>
+                <X weight="bold" className="w-4 h-4" />
+                Cancel
+              </>
+            ) : (
+              <>
+                <Plus weight="bold" className="w-4 h-4" />
+                New Goal
+              </>
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Coach report */}
+      {coachMutation.isError && (
+        <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
+          <p className="text-sm text-destructive flex items-center gap-1.5">
+            {coachMutation.error.message.includes('not configured')
+              ? 'OpenAI API key not configured. Add your key in Settings.'
+              : coachMutation.error.message}
+          </p>
+        </div>
+      )}
+      {coachMutation.isPending && (
+        <div className="rounded-xl border border-border bg-card p-5 animate-pulse space-y-3">
+          <div className="h-4 bg-muted rounded w-1/3" />
+          <div className="h-3 bg-muted rounded w-full" />
+          <div className="h-3 bg-muted rounded w-5/6" />
+          <div className="h-3 bg-muted rounded w-2/3" />
+        </div>
+      )}
+      {coachMutation.data && (
+        <CoachReport
+          coach={coachMutation.data.coach}
+          onClose={() => coachMutation.reset()}
+        />
+      )}
 
       {/* Goal form */}
       {showForm && (

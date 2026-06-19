@@ -3,6 +3,7 @@ import Database from 'better-sqlite3'
 import crypto from 'crypto'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import OpenAI from 'openai'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PORT = process.env.PORT || 3000
@@ -301,6 +302,139 @@ app.get('/api/export', auth, (req, res) => {
     goals,
     settings,
   })
+})
+
+// ── AI Helper ─────────────────────────────────────────────────────────────
+async function callOpenAI(systemPrompt, userMessage) {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'openai_api_key'").get()
+  if (!row?.value) {
+    throw new Error('OpenAI API key not configured. Add your key in Settings.')
+  }
+
+  const openai = new OpenAI({ apiKey: row.value })
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ],
+    temperature: 0.7,
+    max_tokens: 1200,
+  })
+  return completion.choices[0].message.content
+}
+
+// ── AI Settings ────────────────────────────────────────────────────────────
+app.put('/api/settings/ai-key', auth, (req, res) => {
+  const { apiKey } = req.body
+  if (!apiKey || !apiKey.trim()) {
+    return res.status(400).json({ error: 'API key is required' })
+  }
+  db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
+    .run('openai_api_key', apiKey.trim())
+  res.json({ ok: true })
+})
+
+// ── AI Coach ───────────────────────────────────────────────────────────────
+app.post('/api/ai/coach', auth, async (req, res) => {
+  try {
+    const entries = db.prepare(
+      "SELECT content, mood, created_at FROM entries WHERE date(created_at) >= date('now', '-7 days') ORDER BY created_at DESC"
+    ).all()
+
+    const goals = db.prepare('SELECT * FROM goals ORDER BY created_at DESC').all()
+
+    if (entries.length === 0 && goals.length === 0) {
+      return res.status(400).json({ error: 'No entries or goals to coach on. Write some entries and set some goals first.' })
+    }
+
+    const systemPrompt = `You are a compassionate, insightful life coach. You review a person's diary entries and goals, then give a brief, personalized coaching report.
+
+Your tone is warm, encouraging, and gently honest. You notice patterns, celebrate wins, and offer one or two specific suggestions.
+
+Keep your response to 3-4 short paragraphs. Use plain text — no markdown formatting. Address the person directly as "you".
+
+Structure:
+1. A warm opening that acknowledges their recent entries
+2. A note on their goals — what's progressing, what might need attention
+3. One specific, actionable suggestion
+4. A brief encouraging closing`
+
+    const userMessage = `Here are the recent diary entries and goals:\n\nENTRIES (last 7 days):\n${JSON.stringify(entries, null, 2)}\n\nGOALS:\n${JSON.stringify(goals, null, 2)}`
+
+    const coach = await callOpenAI(systemPrompt, userMessage)
+    res.json({ coach })
+  } catch (err) {
+    const status = err.message.includes('not configured') ? 400 : 500
+    res.status(status).json({ error: err.message })
+  }
+})
+
+// ── AI Year Review ─────────────────────────────────────────────────────────
+app.post('/api/ai/year-review', auth, async (req, res) => {
+  const { year } = req.body
+  if (!year) {
+    return res.status(400).json({ error: 'Year is required' })
+  }
+
+  try {
+    const entries = db.prepare(
+      "SELECT content, mood, created_at FROM entries WHERE strftime('%Y', created_at) = ? ORDER BY created_at ASC"
+    ).all(String(year))
+
+    if (entries.length === 0) {
+      return res.status(400).json({ error: `No entries found for ${year}.` })
+    }
+
+    const goals = db.prepare('SELECT * FROM goals ORDER BY created_at DESC').all()
+
+    // Pre-compute some stats to include in the prompt
+    const entryCount = entries.length
+    const totalWords = entries.reduce((sum, e) => sum + e.content.trim().split(/\s+/).filter(Boolean).length, 0)
+    const moods = entries.map(e => e.mood).filter(Boolean)
+    const moodCounts = {}
+    moods.forEach(m => { moodCounts[m] = (moodCounts[m] || 0) + 1 })
+    const topMood = Object.entries(moodCounts).sort(([,a], [,b]) => b - a)[0]
+
+    const systemPrompt = `You are a thoughtful, narrative storyteller. You write beautiful "Year in Review" summaries for a personal diary.
+
+Your tone is reflective, warm, and slightly poetic — like a close friend looking back on a shared year. You weave statistics into a story, not a report.
+
+Use markdown formatting:
+- ## headings for sections
+- **bold** for emphasis
+- > blockquotes for memorable diary excerpts
+- Short paragraphs with emotional resonance
+
+Structure:
+1. ## By the Numbers — a paragraph weaving together the entry count, total words, and overall consistency
+2. ## The Emotional Landscape — describe the dominant mood and any mood patterns
+3. ## Moments That Mattered — highlight themes you notice in the entries (use a blockquote for one that stands out)
+4. ## Goals & Growth — reflect on what the person was working toward
+5. ## A Look Ahead — one paragraph of forward-looking encouragement`
+
+    const stats = {
+      year,
+      entryCount,
+      totalWords,
+      topMood: topMood ? `${topMood[0]} (${topMood[1]} of ${moods.length} entries with mood)` : 'no mood data',
+    }
+
+    // Send only content + mood + date (trim heavy content to avoid token overflow)
+    const lightEntries = entries.map(e => ({
+      content: e.content.slice(0, 600),
+      mood: e.mood,
+      date: e.created_at?.split('T')[0],
+    }))
+
+    const userMessage = `STATISTICS:\n${JSON.stringify(stats, null, 2)}\n\nENTRIES:\n${JSON.stringify(lightEntries, null, 2)}\n\nGOALS:\n${JSON.stringify(goals, null, 2)}`
+
+    const review = await callOpenAI(systemPrompt, userMessage)
+    res.json({ review })
+  } catch (err) {
+    const status = err.message.includes('not configured') ? 400 : 500
+    res.status(status).json({ error: err.message })
+  }
 })
 
 // ── Serve React app in production ────────────────────────────────────────

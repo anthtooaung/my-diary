@@ -10,6 +10,7 @@ import { DigestPage } from '@/pages/DigestPage'
 import { SearchPage } from '@/pages/SearchPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { StatsPage } from '@/pages/StatsPage'
+import { YearReviewPage } from '@/pages/YearReviewPage'
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/stats" element={<StatsPage />} />
+            <Route path="/year-review" element={<YearReviewPage />} />
           </Route>
         </Route>
       </Routes>
