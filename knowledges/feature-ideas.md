@@ -102,7 +102,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
 
 ## Tier C — Bigger Ideas (Planned for June 19, 2026)
 
-### C1 — Stats Page
+### C1 — Stats Page ✅ DONE (June 19, 2026)
 - **What**: Full analytics dashboard for your diary
 - **Components**:
   - **Mood distribution pie/donut chart** — what percentage of days are happy vs anxious?
@@ -175,13 +175,13 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
 
 ### Focus: Tier C
 
-1. **C1 — Stats Page** (foundation, no AI needed, standalone page)
+1. ~~**C1 — Stats Page**~~ ✅ **DONE** — see `knowledges/daily-log.md` for changelog
 2. **C4 — Writing Prompts** (quick win, enriches daily writing habit)
 3. **C5 — Rich Text Editor** (upgrades the core writing experience)
 4. **C2 — AI Goal Coach** (if LLM API is set up)
 5. **C3 — Year in Review** (biggest scope, save for last or when data is richer)
 
 Prerequisites across Tier C:
-- **Charting library**: needed by C1, C3 → install recharts or chart.js early
+- ~~**Charting library**: needed by C1, C3 → install recharts or chart.js early~~ ✅ recharts installed
 - **LLM API key**: needed by C2, C3, and A3 → configure once, reusable across features
 - **Markdown editor**: needed by C5 → research library, affects core entry form

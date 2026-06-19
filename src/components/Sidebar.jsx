@@ -5,6 +5,7 @@ import {
   Target,
   NewspaperClipping,
   MagnifyingGlass,
+  ChartBar,
   Gear,
   SignOut,
 } from '@phosphor-icons/react'
@@ -18,6 +19,7 @@ const links = [
   { to: '/goals', label: 'Goals', icon: Target },
   { to: '/digest', label: 'Digest', icon: NewspaperClipping },
   { to: '/search', label: 'Search', icon: MagnifyingGlass },
+  { to: '/stats', label: 'Stats', icon: ChartBar },
   { to: '/settings', label: 'Settings', icon: Gear },
 ]
 

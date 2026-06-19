@@ -57,19 +57,29 @@ Track of completed tasks and architecture changes by date.
 
 ---
 
-## 2026-06-19 — Planned: Tier C Features
+## 2026-06-19 — C1 Stats Page
 
-See `knowledges/feature-ideas.md` for full details.
+### Done
+- [x] Install recharts charting library
+- [x] Create `StatsPage.jsx` with 6 analytics sections (mood pie, entries/week bar, word count line, top words bar, goal completion cards, mood heatmap grid)
+- [x] Add `/stats` route in `App.jsx` and sidebar nav link (`ChartBar` icon)
+- [x] All sections handle loading skeleton, error, empty, and data states
+- [x] **No server changes** — all aggregation done client-side via `useMemo` on existing `api.getEntries()`, `api.getGoals()`, `api.getMoods()` data
 
-### Priority Order
-1. **C1 — Stats Page** — mood pie, entries/week bar, word counts, mood heatmap, goal completion rate
-2. **C4 — Writing Prompts** — curated prompt bank, mood-aware, random rotation
-3. **C5 — Rich Text Editor** — markdown editing, preview, auto-save draft
-4. **C2 — AI Goal Coach** — LLM-powered weekly check-in against active goals
-5. **C3 — Year in Review** — full-year aggregate with AI narrative
+### Architecture State After
+- **Chart library**: recharts — PieChart, BarChart, LineChart used with ResponsiveContainer
+- **Stats page**: `src/pages/StatsPage.jsx` — 6 ChartSection components, each with composable sub-components
+- **Sidebar**: 7 nav items (added Stats between Search and Settings)
+- **Data pattern**: Client-side aggregation is viable for single-user scale — all entries/goals/moods fetched once
 
-### Prerequisites
-- [ ] Install charting library (recharts or chart.js)
+### Remaining Tier C (in priority order)
+1. **C4 — Writing Prompts** — curated prompt bank, mood-aware, random rotation
+2. **C5 — Rich Text Editor** — markdown editing, preview, auto-save draft
+3. **C2 — AI Goal Coach** — LLM-powered weekly check-in against active goals
+4. **C3 — Year in Review** — full-year aggregate with AI narrative
+
+### Prerequisites Remaining
+- [x] ~~Install charting library~~ → recharts installed
 - [ ] Research markdown editor library (TipTap, Milkdown, etc.)
 - [ ] Configure LLM API key (needed by C2, C3, and A3)
 

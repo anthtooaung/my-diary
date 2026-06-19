@@ -9,6 +9,7 @@ import { GoalsPage } from '@/pages/GoalsPage'
 import { DigestPage } from '@/pages/DigestPage'
 import { SearchPage } from '@/pages/SearchPage'
 import { SettingsPage } from '@/pages/SettingsPage'
+import { StatsPage } from '@/pages/StatsPage'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/digest" element={<DigestPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/stats" element={<StatsPage />} />
           </Route>
         </Route>
       </Routes>

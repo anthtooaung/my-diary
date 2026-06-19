@@ -7,7 +7,11 @@
       "Bash(npx vite *)"
     ]
   },
+  "enabledMcpjsonServers": [
+    "context7"
+  ],
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": false
-  }
+  },
+  "enableAllProjectMcpServers": true
 }
