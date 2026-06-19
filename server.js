@@ -444,6 +444,57 @@ Structure:
   }
 })
 
+// ── AI Digest ─────────────────────────────────────────────────────────────
+app.post('/api/ai/digest', auth, async (req, res) => {
+  const { start, end } = req.body
+  if (!start || !end) {
+    return res.status(400).json({ error: 'Start and end dates are required' })
+  }
+
+  try {
+    const entries = db.prepare(
+      'SELECT content, mood, created_at FROM entries WHERE date(created_at) >= ? AND date(created_at) <= ? ORDER BY created_at ASC'
+    ).all(start, end)
+
+    if (entries.length === 0) {
+      return res.status(400).json({ error: 'No entries found for this week.' })
+    }
+
+    const moods = entries.map(e => e.mood).filter(Boolean)
+    const moodCounts = {}
+    moods.forEach(m => { moodCounts[m] = (moodCounts[m] || 0) + 1 })
+    const topMood = Object.entries(moodCounts).sort(([,a], [,b]) => b - a)[0]
+    const totalWords = entries.reduce((sum, e) => sum + e.content.trim().split(/\s+/).filter(Boolean).length, 0)
+
+    const systemPrompt = `You are an insightful narrator. Review a week's diary entries and write a digest.
+
+Structure your response with markdown:
+1. ## Overall Mood — describe the mood trend (1-2 sentences)
+2. ## Key Themes — what topics kept showing up? (1-2 sentences)
+3. ## Goals Check — any progress visible? (1 sentence)
+4. ## Highlight — pick one entry that stands out and quote a short excerpt (> quote)
+5. ## Looking Ahead — one encouraging sentence
+
+Keep it concise and personal. Address the person as "you".`
+
+    const lightEntries = entries.map(e => ({
+      content: e.content.slice(0, 400),
+      mood: e.mood,
+      date: e.created_at?.split('T')[0],
+    }))
+
+    const stats = { entryCount: entries.length, totalWords, topMood: topMood ? `${topMood[0]} (${topMood[1]} entries)` : 'none' }
+
+    const userMessage = `WEEK STATS:\n${JSON.stringify(stats)}\n\nENTRIES:\n${JSON.stringify(lightEntries, null, 2)}`
+
+    const digest = await callOpenAI(systemPrompt, userMessage)
+    res.json({ digest })
+  } catch (err) {
+    const status = err.message.includes('not configured') ? 400 : 500
+    res.status(status).json({ error: err.message })
+  }
+})
+
 // ── Serve React app in production ────────────────────────────────────────
 const clientDist = path.join(__dirname, 'dist')
 if (fs.existsSync(clientDist)) {

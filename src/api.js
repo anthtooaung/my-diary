@@ -144,4 +144,11 @@ export const api = {
       body: JSON.stringify({ year }),
     })
   },
+
+  getAIDigest(start, end) {
+    return request('/ai/digest', {
+      method: 'POST',
+      body: JSON.stringify({ start, end }),
+    })
+  },
 }

@@ -180,3 +180,20 @@ Track of completed tasks and architecture changes by date.
 - **Streaks**: `StreakBadge` component — computes from entry dates, shown on Dashboard
 - **Pin**: DB column `pinned INTEGER DEFAULT 0`, API handles pin toggle, EntryCard Pin icon, Dashboard pinned-first ordering
 - **CalendarPage**: now uses EntryCard component for day detail (shared edit/delete/pin UI)
+
+---
+
+## 2026-06-19 — A3 AI-Powered Digest
+
+### Done
+- [x] Add `POST /api/ai/digest` endpoint — GPT-4o-mini generates 5-section digest from week's entries
+- [x] Add `api.getAIDigest(start, end)` client function
+- [x] Add Summary/AI Digest toggle tabs on DigestPage
+- [x] AI mode auto-generates on first click, stays cached while toggling tabs
+- [x] AI digest rendered via MarkdownContent (AI returns markdown)
+- [x] Error state for missing API key, loading skeleton, empty week handling
+
+### Architecture State After
+- **DigestPage**: dual-mode — "Summary" (client-side, existing behavior) + "AI Digest" (OpenAI-powered via gpt-4o-mini)
+- **AI prompt**: narrative narrator persona, 5-section markdown format (Overall Mood, Key Themes, Goals Check, Highlight excerpt, Looking Ahead)
+- **Mode switching**: client digest always available as fallback; AI result cached per week while on page

@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '@/api'
 import { MarkdownContent } from '@/components/MarkdownContent'
 import { EmptyState } from '@/components/EmptyState'
-import { parseDate } from '@/lib/utils'
-import { NewspaperClipping, CaretLeft, CaretRight, WarningOctagon, TrendUp, TrendDown } from '@phosphor-icons/react'
+import { parseDate, cn } from '@/lib/utils'
+import { NewspaperClipping, CaretLeft, CaretRight, WarningOctagon, TrendUp, TrendDown, Sparkle } from '@phosphor-icons/react'
 import { POSITIVE_MOODS } from '@/lib/moods'
 
 function getWeekRange(date) {
@@ -29,6 +29,7 @@ function toDateStr(date) {
 
 export function DigestPage() {
   const [weekOffset, setWeekOffset] = useState(0)
+  const [mode, setMode] = useState('client')
   const baseDate = new Date()
   baseDate.setDate(baseDate.getDate() + weekOffset * 7)
   const { start, end } = getWeekRange(baseDate)
@@ -36,6 +37,10 @@ export function DigestPage() {
   const { data: entries = [], isLoading, isError } = useQuery({
     queryKey: ['entries', 'digest', toDateStr(start), toDateStr(end)],
     queryFn: () => api.getEntries({ start: toDateStr(start), end: toDateStr(end) }),
+  })
+
+  const aiMutation = useMutation({
+    mutationFn: () => api.getAIDigest(toDateStr(start), toDateStr(end)),
   })
 
   const digest = useMemo(() => {
@@ -108,7 +113,7 @@ export function DigestPage() {
       {/* Week nav */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => setWeekOffset((o) => o - 1)}
+          onClick={() => { setWeekOffset((o) => o - 1); aiMutation.reset() }}
           className="p-2 rounded-lg hover:bg-accent text-muted-foreground transition-colors"
         >
           <CaretLeft weight="bold" className="w-5 h-5" />
@@ -117,7 +122,7 @@ export function DigestPage() {
           {formatDate(start)} – {formatDate(end)}
         </span>
         <button
-          onClick={() => setWeekOffset((o) => o + 1)}
+          onClick={() => { setWeekOffset((o) => o + 1); aiMutation.reset() }}
           disabled={weekOffset === 0}
           className="p-2 rounded-lg hover:bg-accent text-muted-foreground transition-colors disabled:opacity-30"
         >
@@ -125,7 +130,58 @@ export function DigestPage() {
         </button>
       </div>
 
+      {/* Mode toggle */}
+      <div className="flex rounded-lg border border-border overflow-hidden">
+        <button
+          onClick={() => setMode('client')}
+          className={cn(
+            'px-4 py-1.5 text-xs font-medium transition-colors',
+            mode === 'client'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          Summary
+        </button>
+        <button
+          onClick={() => { setMode('ai'); if (!aiMutation.data) aiMutation.mutate() }}
+          className={cn(
+            'px-4 py-1.5 text-xs font-medium transition-colors flex items-center gap-1',
+            mode === 'ai'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          <Sparkle weight={mode === 'ai' ? 'fill' : 'regular'} className="w-3.5 h-3.5" />
+          AI Digest
+        </button>
+      </div>
+
       {/* Digest content */}
+      {mode === 'ai' && aiMutation.isError && (
+        <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
+          <p className="text-sm text-destructive flex items-center gap-1.5">
+            {aiMutation.error.message.includes('not configured')
+              ? 'OpenAI API key not configured. Add your key in Settings.'
+              : aiMutation.error.message}
+          </p>
+        </div>
+      )}
+      {mode === 'ai' && aiMutation.isPending && (
+        <div className="rounded-xl border border-border bg-card p-5 animate-pulse space-y-3">
+          <div className="h-5 bg-muted rounded w-1/3" />
+          <div className="h-3 bg-muted rounded w-full" />
+          <div className="h-3 bg-muted rounded w-5/6" />
+          <div className="h-3 bg-muted rounded w-2/3" />
+        </div>
+      )}
+      {mode === 'ai' && aiMutation.data ? (
+        <div className="rounded-xl border border-primary/20 bg-card p-5">
+          <MarkdownContent>{aiMutation.data.digest}</MarkdownContent>
+        </div>
+      ) : mode === 'ai' && !aiMutation.isPending && !aiMutation.isError ? (
+        null
+      ) : mode === 'client' ? (<>
       {isLoading ? (
         <div className="rounded-xl border border-border bg-card p-5 animate-pulse">
           <div className="h-4 bg-muted rounded w-1/3 mb-3" />
@@ -221,6 +277,7 @@ export function DigestPage() {
           </div>
         </div>
       )}
+      </>) : null}
     </div>
   )
 }

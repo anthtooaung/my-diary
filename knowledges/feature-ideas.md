@@ -24,7 +24,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
   - Active vs completed visual distinction
   - Same data, different render
 
-### A3 — AI-Powered Digest
+### A3 — AI-Powered Digest ✅ DONE (June 19, 2026)
 - **Problem**: DigestPage is purely client-side — counts moods, finds frequent words, no real intelligence.
 - **What**: Send week's entries to an LLM → get back mood trend, themes, goal correlation, highlight quote
 - **Needs**:
