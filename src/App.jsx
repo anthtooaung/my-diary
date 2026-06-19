@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { useDiaryStore } from '@/stores/useDiaryStore'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { AppLayout } from '@/components/AppLayout'
 import { LoginPage } from '@/pages/LoginPage'
@@ -13,6 +15,12 @@ import { StatsPage } from '@/pages/StatsPage'
 import { YearReviewPage } from '@/pages/YearReviewPage'
 
 export default function App() {
+  const darkMode = useDiaryStore((s) => s.darkMode)
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode)
+  }, [darkMode])
+
   return (
     <AuthProvider>
       <Routes>

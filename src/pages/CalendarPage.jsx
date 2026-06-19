@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api'
+import { EntryCard } from '@/components/EntryCard'
 import { MoodDot } from '@/components/MoodDot'
 import { MoodBadge } from '@/components/MoodBadge'
 import { MarkdownContent } from '@/components/MarkdownContent'
@@ -9,6 +10,7 @@ import { CalendarDots, CaretLeft, CaretRight, WarningOctagon } from '@phosphor-i
 import { cn } from '@/lib/utils'
 
 export function CalendarPage() {
+  const queryClient = useQueryClient()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(null)
 
@@ -31,6 +33,14 @@ export function CalendarPage() {
     queryFn: () => api.getEntries({ date: selectedDate }),
     enabled: !!selectedDate,
     select: (entries) => entries?.[0] ?? null,
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => api.updateEntry(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['entry', selectedDate] })
+      queryClient.invalidateQueries({ queryKey: ['moods'] })
+    },
   })
 
   const moodByDate = {}
@@ -136,10 +146,17 @@ export function CalendarPage() {
               Failed to load entry for this day.
             </p>
           ) : dayEntry ? (
-            <div className="space-y-2">
-              {dayEntry.mood && <MoodBadge mood={dayEntry.mood} size="md" />}
-              <MarkdownContent>{dayEntry.content}</MarkdownContent>
-            </div>
+            <EntryCard
+              entry={dayEntry}
+              onDelete={(id) => {
+                api.deleteEntry(id).then(() => {
+                  queryClient.invalidateQueries({ queryKey: ['entry', selectedDate] })
+                  queryClient.invalidateQueries({ queryKey: ['moods'] })
+                  setSelectedDate(null)
+                })
+              }}
+              onUpdate={(id, data) => updateMutation.mutate({ id, data })}
+            />
           ) : (
             <EmptyState
               icon={CalendarDots}

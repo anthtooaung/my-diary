@@ -9,6 +9,8 @@ import {
   CalendarCheck,
   Gear,
   SignOut,
+  Sun,
+  Moon,
 } from '@phosphor-icons/react'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
@@ -28,6 +30,8 @@ const links = [
 export function Sidebar() {
   const { logout } = useAuth()
   const closeSidebar = useDiaryStore((s) => s.closeSidebar)
+  const darkMode = useDiaryStore((s) => s.darkMode)
+  const toggleDarkMode = useDiaryStore((s) => s.toggleDarkMode)
 
   return (
     <aside className="flex flex-col h-full border-r border-border bg-card w-56 shrink-0">
@@ -61,8 +65,19 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Logout */}
-      <div className="p-3 border-t border-border">
+      {/* Dark mode + Logout */}
+      <div className="p-3 border-t border-border space-y-0.5">
+        <button
+          onClick={toggleDarkMode}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+        >
+          {darkMode ? (
+            <Sun weight="duotone" className="w-5 h-5" />
+          ) : (
+            <Moon weight="duotone" className="w-5 h-5" />
+          )}
+          {darkMode ? 'Light Mode' : 'Dark Mode'}
+        </button>
         <button
           onClick={logout}
           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"

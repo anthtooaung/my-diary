@@ -6,7 +6,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
 
 ## Tier A — Fill Gaps from Original Vision
 
-### A1 — Edit Entries
+### A1 — Edit Entries ✅ DONE (June 19, 2026)
 - **Problem**: Can only create & delete. To fix a typo, you must delete and re-create the whole entry.
 - **What**: Add edit button on EntryCard → inline or modal form → `PUT /api/entries/:id`
 - **Needs**:
@@ -55,7 +55,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
 
 ## Tier B — Quality of Life
 
-### B1 — Dark Mode Toggle
+### B1 — Dark Mode Toggle ✅ DONE (June 19, 2026)
 - **Problem**: CSS has `.dark` class but no user-facing switch. Dark mode only activates at OS level.
 - **What**: Toggle button in sidebar or settings that adds/removes `.dark` on `<html>`, persisted in Zustand + localStorage
 - **Needs**:
@@ -63,7 +63,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
   - Toggle icon (Sun/Moon from Phosphor) in Sidebar or AppLayout header
   - Apply `.dark` class to `document.documentElement` on mount
 
-### B2 — Writing Streaks
+### B2 — Writing Streaks ✅ DONE (June 19, 2026)
 - **Problem**: No motivation mechanic. Diary habit is hard to build.
 - **What**: "You've written 12 days in a row!" badge on Dashboard
 - **Needs**:
@@ -89,7 +89,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
   - Tag chips on EntryCard
   - Filter sidebar or tag cloud on SearchPage/DashboardPage
 
-### B5 — Pin / Favourite Entries
+### B5 — Pin / Favourite Entries ✅ DONE (June 19, 2026)
 - **Problem**: Some entries are special but get buried in the list.
 - **What**: Star/bookmark button on EntryCard → pinned section at top of list, or filter to see only pinned
 - **Needs**:

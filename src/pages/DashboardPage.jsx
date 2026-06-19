@@ -6,6 +6,7 @@ import { api } from '@/api'
 import { EntryCard } from '@/components/EntryCard'
 import { EmptyState } from '@/components/EmptyState'
 import { WritingPromptCard } from '@/components/WritingPromptCard'
+import { StreakBadge } from '@/components/StreakBadge'
 import { MarkdownToolbar } from '@/components/MarkdownToolbar'
 import { MarkdownContent } from '@/components/MarkdownContent'
 import { useAutoSave } from '@/hooks/useAutoSave'
@@ -62,6 +63,11 @@ export function DashboardPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => api.deleteEntry(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['entries'] }),
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => api.updateEntry(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['entries'] }),
   })
 
@@ -158,10 +164,13 @@ export function DashboardPage() {
 
       {/* Recent entries */}
       <section>
-        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-          <Notebook weight="duotone" className="w-5 h-5 text-primary" />
-          Recent Entries
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Notebook weight="duotone" className="w-5 h-5 text-primary" />
+            Recent Entries
+          </h2>
+          <StreakBadge entries={entries} />
+        </div>
         {deleteMutation.isError && (
           <p className="text-sm text-destructive mb-3 flex items-center gap-1.5">
             Failed to delete entry. Please try again.
@@ -184,11 +193,24 @@ export function DashboardPage() {
           />
         ) : (
           <div className="space-y-3">
-            {entries.map((entry) => (
+            {/* Pinned entries */}
+            {entries.filter((e) => e.pinned).map((entry) => (
               <EntryCard
                 key={entry.id}
                 entry={entry}
-                onDelete={() => deleteMutation.mutate(entry.id)}
+                onDelete={(id) => deleteMutation.mutate(id)}
+                onUpdate={(id, data) => updateMutation.mutate({ id, data })}
+                onTogglePin={(id, pinned) => updateMutation.mutate({ id, data: { pinned } })}
+              />
+            ))}
+            {/* Unpinned entries */}
+            {entries.filter((e) => !e.pinned).map((entry) => (
+              <EntryCard
+                key={entry.id}
+                entry={entry}
+                onDelete={(id) => deleteMutation.mutate(id)}
+                onUpdate={(id, data) => updateMutation.mutate({ id, data })}
+                onTogglePin={(id, pinned) => updateMutation.mutate({ id, data: { pinned } })}
               />
             ))}
           </div>

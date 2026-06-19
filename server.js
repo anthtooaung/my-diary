@@ -25,6 +25,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     content TEXT NOT NULL,
     mood TEXT,
+    pinned INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
   );
 
@@ -48,6 +49,11 @@ const existing = db.prepare('SELECT value FROM settings WHERE key = ?').get('pas
 if (!existing) {
   db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('password', 'admin')
 }
+
+// Migrate: add pinned column if not exists
+try {
+  db.exec('ALTER TABLE entries ADD COLUMN pinned INTEGER DEFAULT 0')
+} catch { /* column already exists */ }
 
 // Migrate existing date formats to ISO 8601 (space → T separator)
 db.prepare("UPDATE entries SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at NOT LIKE '%T%'").run()
@@ -160,16 +166,17 @@ app.put('/api/entries/:id', auth, (req, res) => {
     return res.status(404).json({ error: 'Entry not found' })
   }
 
-  const { content, mood } = req.body
+  const { content, mood, pinned } = req.body
   if (content !== undefined && (!content || !content.trim())) {
     return res.status(400).json({ error: 'Content cannot be empty' })
   }
 
   db.prepare(
-    'UPDATE entries SET content = ?, mood = ? WHERE id = ?'
+    'UPDATE entries SET content = ?, mood = ?, pinned = ? WHERE id = ?'
   ).run(
     content !== undefined ? content.trim() : entry.content,
     mood !== undefined ? mood : entry.mood,
+    pinned !== undefined ? (pinned ? 1 : 0) : entry.pinned ?? 0,
     req.params.id,
   )
 

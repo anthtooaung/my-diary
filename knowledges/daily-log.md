@@ -155,3 +155,28 @@ Track of completed tasks and architecture changes by date.
 - [x] Set up project structure, shadcn/ui theme, routing
 - [x] Configured MCP servers (context7, claude-mem)
 - [x] Defined developer guidelines in CLAUDE.md
+
+---
+
+## 2026-06-19 — Quick Wins: A1 Edit + B1 Dark Mode + B2 Streaks + B5 Pin
+
+### Done
+- [x] **A1 Edit Entries**: Add edit mode to EntryCard (inline textarea + mood selector + Save/Cancel)
+- [x] **A1**: Wire updateMutation on DashboardPage and CalendarPage
+- [x] **A1**: CalendarPage now uses EntryCard for day detail (shared edit/delete UI)
+- [x] **B1 Dark Mode**: Add darkMode + toggleDarkMode to Zustand store with persist middleware (localStorage)
+- [x] **B1**: Sun/Moon toggle button in Sidebar (bottom section)
+- [x] **B1**: .dark class sync on document.documentElement in App.jsx
+- [x] **B2 Writing Streaks**: StreakBadge component — counts consecutive days with entries
+- [x] **B2**: 🔥 badge on Dashboard header when streak ≥ 2 days
+- [x] **B5 Pin Entries**: Add pinned column to entries table with migration
+- [x] **B5**: Extend PUT /api/entries/:id to handle pinned field
+- [x] **B5**: PushPin toggle button on EntryCard (filled amber when pinned)
+- [x] **B5**: Pinned entries shown first on Dashboard (split into pinned + unpinned sections)
+
+### Architecture State After
+- **EntryCard**: now supports onUpdate (inline edit) and onTogglePin (star toggle) in addition to onDelete
+- **Dark mode**: Zustand `darkMode` state, persisted to localStorage, Sun/Moon toggle in sidebar, .dark class applied to `<html>`
+- **Streaks**: `StreakBadge` component — computes from entry dates, shown on Dashboard
+- **Pin**: DB column `pinned INTEGER DEFAULT 0`, API handles pin toggle, EntryCard Pin icon, Dashboard pinned-first ordering
+- **CalendarPage**: now uses EntryCard component for day detail (shared edit/delete/pin UI)
