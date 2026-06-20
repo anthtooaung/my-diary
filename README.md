@@ -124,3 +124,37 @@ See `knowledges/` for detailed docs:
 - `project-flow.md` — User journeys and data flow
 - `react-migration-plan.md` — Original migration plan
 - `refactor-zod-zustand-mood-centralization.md` — Refactor details
+
+## Development Tools (Claude Code)
+
+### MCP Servers
+
+| Name | Package | What It Does |
+|------|---------|--------------|
+| [Context7](https://github.com/context7/context7) | `@context7/context7-mcp-server` | Pulls current library docs (React 19, TanStack Query 5, Tailwind 4, Express 5) directly into Claude's context. Ensures accurate, up-to-date code generation. |
+
+Configured in `.mcp.json`.
+
+### Skills
+
+| Name | File | What It Does |
+|------|------|--------------|
+| `/seed-entries` | `.claude/skills/seed-entries/SKILL.md` | Inserts 2-4 weeks of realistic diary entries + goals into the database via the API. Used for testing and demo purposes. |
+
+### Agents
+
+| Name | File | What It Does |
+|------|------|--------------|
+| `ui-reviewer` | `.claude/agents/ui-reviewer.md` | Reviews all pages for visual consistency, component state handling (loading/empty/error/success), responsive layout, dark mode, and mood color consistency. Reports issues with file paths and severity. |
+| `code-auditor` | `.claude/agents/code-auditor.md` | Scans source code for bugs, missing error handling, input validation issues, React anti-patterns (keys, unmounted state updates, conditional hooks), and data integrity problems. Reports with file:line references and suggested fixes. |
+
+### Plans
+
+Pre-implementation design plans stored in `.claude/plans/`:
+- `a3-ai-digest.md` — AI-powered digest feature
+- `c1-stats-page.md` — Analytics dashboard
+- `c2-c3-ai-features.md` — AI Goal Coach + Year in Review
+- `c4-writing-prompts.md` — Writing prompt system
+- `c5-rich-text-editor.md` — Markdown editor integration
+- `quick-wins-a1-b1-b2-b5.md` — Edit, Dark Mode, Streaks, Pin
+- `b3-b4-mood-intensity-tags.md` — Mood intensity + tags
