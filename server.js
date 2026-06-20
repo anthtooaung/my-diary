@@ -69,6 +69,38 @@ try {
 db.prepare("UPDATE entries SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at NOT LIKE '%T%'").run()
 db.prepare("UPDATE goals SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at NOT LIKE '%T%'").run()
 
+// ── FTS5 Full-Text Search ─────────────────────────────────────────────────
+db.exec(`
+  CREATE VIRTUAL TABLE IF NOT EXISTS entries_fts USING fts5(content, mood, tags, content=entries, content_rowid=id);
+`)
+
+// Triggers to keep FTS in sync with entries table
+db.exec(`
+  CREATE TRIGGER IF NOT EXISTS entries_ai AFTER INSERT ON entries BEGIN
+    INSERT INTO entries_fts(rowid, content, mood, tags)
+    VALUES (new.id, new.content, new.mood, new.tags);
+  END;
+
+  CREATE TRIGGER IF NOT EXISTS entries_ad AFTER DELETE ON entries BEGIN
+    INSERT INTO entries_fts(entries_fts, rowid, content, mood, tags)
+    VALUES ('delete', old.id, old.content, old.mood, old.tags);
+  END;
+
+  CREATE TRIGGER IF NOT EXISTS entries_au AFTER UPDATE ON entries BEGIN
+    INSERT INTO entries_fts(entries_fts, rowid, content, mood, tags)
+    VALUES ('delete', old.id, old.content, old.mood, old.tags);
+    INSERT INTO entries_fts(rowid, content, mood, tags)
+    VALUES (new.id, new.content, new.mood, new.tags);
+  END;
+`)
+
+// Backfill FTS with existing entries (one-time, no-op if already populated)
+const ftsCount = db.prepare("SELECT count(*) as c FROM entries_fts").get()
+const entryCount = db.prepare("SELECT count(*) as c FROM entries").get()
+if (ftsCount.c === 0 && entryCount.c > 0) {
+  db.prepare("INSERT INTO entries_fts(rowid, content, mood, tags) SELECT id, content, mood, tags FROM entries").run()
+}
+
 // ── Middleware ────────────────────────────────────────────────────────────
 const app = express()
 app.use(express.json())
@@ -214,6 +246,48 @@ app.delete('/api/entries/:id', auth, (req, res) => {
   }
   db.prepare('DELETE FROM entries WHERE id = ?').run(req.params.id)
   res.json({ ok: true })
+})
+
+// ── Search Route (FTS5) ───────────────────────────────────────────────────
+app.get('/api/search', auth, (req, res) => {
+  const { q } = req.query
+  if (!q || !q.trim()) {
+    return res.json([])
+  }
+
+  // Escape FTS5 special characters and add prefix matching
+  const sanitized = q
+    .replace(/['"]/g, '')      // remove quotes
+    .replace(/[()]/g, '')      // remove parens
+    .replace(/[-+^~*]/g, ' ')  // replace FTS operators with spaces
+    .trim()
+
+  if (!sanitized) {
+    return res.json([])
+  }
+
+  // Add prefix wildcard for partial word matching
+  const terms = sanitized.split(/\s+/).filter(Boolean)
+  const ftsQuery = terms.map(t => `"${t}"*`).join(' ')
+
+  try {
+    const entries = db.prepare(`
+      SELECT e.*, bm25(entries_fts, 1.0, 1.0, 0.5) as rank
+      FROM entries_fts fts
+      JOIN entries e ON e.id = fts.rowid
+      WHERE entries_fts MATCH ?
+      ORDER BY rank
+      LIMIT 30
+    `).all(ftsQuery).map(e => ({
+      ...e,
+      tags: JSON.parse(e.tags || '[]'),
+    }))
+
+    res.json(entries)
+  } catch (err) {
+    // FTS query syntax error fallback — return empty
+    res.json([])
+  }
 })
 
 // ── Mood Routes ───────────────────────────────────────────────────────────

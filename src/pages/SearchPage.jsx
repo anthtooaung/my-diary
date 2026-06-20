@@ -25,7 +25,7 @@ export function SearchPage() {
 
   const { data: results = [], isLoading, isError } = useQuery({
     queryKey: ['search', searchQuery],
-    queryFn: () => api.getEntries({ q: searchQuery }),
+    queryFn: () => api.searchEntries(searchQuery),
     enabled: searchQuery.length > 0,
   })
 

@@ -183,6 +183,25 @@ Track of completed tasks and architecture changes by date.
 
 ---
 
+## 2026-06-20 — A4 SQLite FTS5 Search
+
+### Done
+- [x] Create FTS5 virtual table `entries_fts` on (content, mood, tags)
+- [x] Add INSERT/UPDATE/DELETE triggers to keep FTS in sync with entries
+- [x] Backfill existing entries into FTS on startup (one-time)
+- [x] New `GET /api/search?q=` endpoint using FTS5 MATCH with BM25 ranking
+- [x] Query sanitization (escape FTS5 special chars) + prefix wildcard matching (`"term"*`)
+- [x] Add `api.searchEntries()` client method
+- [x] Switch SearchPage to use new FTS endpoint
+
+### Architecture State After
+- **FTS5**: `entries_fts` virtual table synced via triggers — zero maintenance
+- **Search endpoint**: `GET /api/search?q=` — BM25-ranked results, limit 30
+- **Query handling**: Sanitized + prefix matching for partial words
+- **Fallback**: FTS syntax errors return empty array gracefully
+
+---
+
 ## 2026-06-20 — A2 Goals Timeline View
 
 ### Done

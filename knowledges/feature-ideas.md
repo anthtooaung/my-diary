@@ -33,14 +33,14 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
   - Streaming or loading state while waiting
   - Fallback to client-side if no API key configured
 
-### A4 — Semantic Search
+### A4 — Semantic Search ✅ DONE (June 20, 2026) — implemented as SQLite FTS5
 - **Problem**: Search is keyword-only. Can't search "times I felt proud" if the word "proud" isn't written.
-- **What**: Embed entries → vector similarity search → find by meaning
-- **Needs**:
-  - Embedding model (could be same LLM API or a local embedding model)
-  - Store embeddings (SQLite with vector extension, or in-memory)
-  - Embed query → cosine similarity against all entries → top-K results
-  - Could also be done client-side for small entry counts
+- **What**: Full-text search with tokenization, stemming, and BM25 relevance ranking via SQLite FTS5
+- **Implemented**:
+  - FTS5 virtual table `entries_fts` with INSERT/UPDATE/DELETE triggers
+  - New `GET /api/search?q=` endpoint with BM25 ranking
+  - Query sanitization + prefix wildcard matching
+  - SearchPage switched to use new FTS endpoint
 
 ### A5 — Data Import ✅ DONE (June 20, 2026)
 - **Problem**: Export exists but no way to restore from the JSON backup.

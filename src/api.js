@@ -84,6 +84,11 @@ export const api = {
     return request(`/entries/${id}`, { method: 'DELETE' })
   },
 
+  // Search (FTS5)
+  searchEntries(query) {
+    return request(`/search?q=${encodeURIComponent(query)}`)
+  },
+
   // Moods
   getMoods(params = {}) {
     const query = new URLSearchParams(params).toString()
