@@ -4,14 +4,20 @@
       "Bash(npm uninstall *)",
       "Bash(npm install *)",
       "Bash(timeout 3 node server.js)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(node -e \"const q = require\\('@tanstack/react-query'\\); console.log\\('keepPreviousData:', typeof q.keepPreviousData\\)\")",
+      "Bash(which puppeteer *)",
+      "Bash(which playwright *)",
+      "Bash(npx --yes playwright --version)",
+      "Bash(npx -y playwright@latest test --version)",
+      "Bash(npx -y playwright-core@latest --version)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "context7"
   ],
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": false
-  },
-  "enableAllProjectMcpServers": true
+  }
 }

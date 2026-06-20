@@ -44,12 +44,6 @@ export function SearchPage() {
     return Array.from(tagSet).sort()
   }, [allEntries])
 
-  // Filter results by selected tag
-  const filteredResults = useMemo(() => {
-    if (!selectedTag) return highlighted
-    return highlighted.filter((entry) => (entry.tags || []).includes(selectedTag))
-  }, [highlighted, selectedTag])
-
   // Client-side snippet extraction with match highlighting
   const highlighted = useMemo(() => {
     if (!searchQuery || !results.length) return results
@@ -106,6 +100,12 @@ export function SearchPage() {
       return { ...entry, content: parts.join('') }
     })
   }, [results, searchQuery])
+
+  // Filter results by selected tag
+  const filteredResults = useMemo(() => {
+    if (!selectedTag) return highlighted
+    return highlighted.filter((entry) => (entry.tags || []).includes(selectedTag))
+  }, [highlighted, selectedTag])
 
   function handleSubmit(e) {
     e.preventDefault()

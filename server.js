@@ -70,8 +70,20 @@ db.prepare("UPDATE entries SET created_at = REPLACE(created_at, ' ', 'T') || 'Z'
 db.prepare("UPDATE goals SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at NOT LIKE '%T%'").run()
 
 // ── FTS5 Full-Text Search ─────────────────────────────────────────────────
+// Drop and recreate FTS5 as internal-content table (no content=entries).
+// External content mode (content=entries) breaks trigger-based inserts.
+const ftsExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='entries_fts'").get()
+if (ftsExists) {
+  db.exec(`
+    DROP TRIGGER IF EXISTS entries_ai;
+    DROP TRIGGER IF EXISTS entries_ad;
+    DROP TRIGGER IF EXISTS entries_au;
+    DROP TABLE IF EXISTS entries_fts;
+  `)
+}
+
 db.exec(`
-  CREATE VIRTUAL TABLE IF NOT EXISTS entries_fts USING fts5(content, mood, tags, content=entries, content_rowid=id);
+  CREATE VIRTUAL TABLE IF NOT EXISTS entries_fts USING fts5(content, mood, tags);
 `)
 
 // Triggers to keep FTS in sync with entries table
@@ -94,10 +106,11 @@ db.exec(`
   END;
 `)
 
-// Backfill FTS with existing entries (one-time, no-op if already populated)
+// Backfill FTS with existing entries
 const ftsCount = db.prepare("SELECT count(*) as c FROM entries_fts").get()
 const entryCount = db.prepare("SELECT count(*) as c FROM entries").get()
-if (ftsCount.c === 0 && entryCount.c > 0) {
+if (ftsCount.c < entryCount.c) {
+  db.prepare("DELETE FROM entries_fts").run()
   db.prepare("INSERT INTO entries_fts(rowid, content, mood, tags) SELECT id, content, mood, tags FROM entries").run()
 }
 
