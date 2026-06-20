@@ -15,7 +15,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
   - Edit mode on `EntryCard.jsx` (inline textarea + mood selector, or popover)
   - Mutation on `DashboardPage.jsx` (or wherever entry list is shown)
 
-### A2 — Goals Timeline View
+### A2 — Goals Timeline View ✅ DONE (June 20, 2026)
 - **Problem**: Original plan shows goals on a visual timeline, but only card list exists.
 - **What**: Second view mode on GoalsPage — toggle between "Cards" and "Timeline"
 - **Needs**:

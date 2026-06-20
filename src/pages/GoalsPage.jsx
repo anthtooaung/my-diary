@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api'
 import { GoalCard } from '@/components/GoalCard'
 import { EmptyState } from '@/components/EmptyState'
-import { Target, Plus, X, Robot } from '@phosphor-icons/react'
+import { GoalTimeline } from '@/components/GoalTimeline'
+import { Target, Plus, X, Robot, SquaresFour, ListBullets } from '@phosphor-icons/react'
 import { CoachReport } from '@/components/CoachReport'
 import { cn } from '@/lib/utils'
 import { goalSchema, GOAL_CATEGORIES } from '@/lib/schemas'
@@ -13,6 +14,7 @@ import { goalSchema, GOAL_CATEGORIES } from '@/lib/schemas'
 export function GoalsPage() {
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState('all')
+  const [viewMode, setViewMode] = useState('cards')
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
   const [saved, setSaved] = useState(false)
@@ -214,22 +216,46 @@ export function GoalsPage() {
         </form>
       )}
 
-      {/* Category filter tabs */}
-      <div className="flex gap-1.5">
-        {['all', ...GOAL_CATEGORIES].map((c) => (
+      {/* Category filter tabs + view toggle */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-1.5">
+          {['all', ...GOAL_CATEGORIES].map((c) => (
+            <button
+              key={c}
+              onClick={() => setFilter(c)}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                filter === c
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+              )}
+            >
+              {c.charAt(0).toUpperCase() + c.slice(1)}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-0.5 p-0.5 rounded-lg border border-border bg-muted">
           <button
-            key={c}
-            onClick={() => setFilter(c)}
+            onClick={() => setViewMode('cards')}
             className={cn(
-              'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-              filter === c
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+              'p-1.5 rounded-md transition-colors',
+              viewMode === 'cards' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
             )}
+            title="Card view"
           >
-            {c.charAt(0).toUpperCase() + c.slice(1)}
+            <SquaresFour weight="bold" className="w-4 h-4" />
           </button>
-        ))}
+          <button
+            onClick={() => setViewMode('timeline')}
+            className={cn(
+              'p-1.5 rounded-md transition-colors',
+              viewMode === 'timeline' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+            )}
+            title="Timeline view"
+          >
+            <ListBullets weight="bold" className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Goal list */}
@@ -254,7 +280,16 @@ export function GoalsPage() {
           title="No goals yet"
           description="Set a goal to start tracking your progress."
         />
+      ) : viewMode === 'timeline' ? (
+        /* Timeline view */
+        <GoalTimeline
+          goals={filtered}
+          onToggle={handleToggle}
+          onEdit={handleEdit}
+          onDelete={deleteMutation.mutate}
+        />
       ) : (
+        /* Card view */
         <div className="space-y-3">
           {active.map((goal) => (
             <GoalCard

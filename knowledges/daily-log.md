@@ -183,6 +183,26 @@ Track of completed tasks and architecture changes by date.
 
 ---
 
+## 2026-06-20 — A2 Goals Timeline View
+
+### Done
+- [x] Create `GoalTimeline.jsx` component — vertical timeline with color-coded dots per category
+- [x] Goals grouped by category (weekly/monthly/yearly) with section headers
+- [x] Timeline dots show status: green (completed), red (overdue), category color (active)
+- [x] Shows created date + deadline, "Overdue" label for past-due goals
+- [x] Hover actions: toggle done, edit, delete
+- [x] Add Cards/Timeline view toggle to GoalsPage (SquaresFour/ListBullets icons)
+- [x] Filter tabs work in both view modes
+- [x] View toggle styled as pill with active state
+
+### Architecture State After
+- **GoalTimeline**: Vertical timeline with left border line and positioned dots
+- **Category grouping**: Each category gets its own section with color dot header
+- **Timeline items**: Compact cards with created date, deadline, overdue indicator
+- **View toggle**: Pill-style switcher next to category filter tabs
+
+---
+
 ## 2026-06-20 — B4 Tags on Entries
 
 ### Done
