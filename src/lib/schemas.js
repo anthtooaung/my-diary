@@ -19,6 +19,8 @@ export const passwordChangeSchema = z.object({
 export const entrySchema = z.object({
   content: z.string().min(1, 'Please write something in your entry.'),
   mood: z.enum(['', ...moodValues]).optional().default(''),
+  intensity: z.number().int().min(1).max(5).optional().default(0),
+  tags: z.array(z.string()).optional().default([]),
 })
 
 export const goalSchema = z.object({

@@ -183,6 +183,70 @@ Track of completed tasks and architecture changes by date.
 
 ---
 
+## 2026-06-20 — B4 Tags on Entries
+
+### Done
+- [x] Add `tags TEXT DEFAULT '[]'` column to entries table (JSON array stored as text)
+- [x] Update `POST /api/entries` and `PUT /api/entries/:id` to handle tags array
+- [x] Update `GET /api/entries` and `GET /api/entries/:id` to parse tags JSON
+- [x] Update `entrySchema` in schemas.js to include `tags` field
+- [x] Create `TagInput.jsx` component — input with hashtag chips, Enter/comma to add, Backspace to remove, click X to delete
+- [x] Add TagInput to DashboardPage (after intensity selector)
+- [x] Add TagInput to EntryCard edit mode
+- [x] Display tag chips on EntryCard view mode
+- [x] Add tag filter to SearchPage — shows all unique tags as filter chips, filters results by selected tag
+- [x] Tags shown in search results with clickable chips for quick filtering
+- [x] Update auto-save draft to include tags
+
+### Architecture State After
+- **DB**: `entries.tags TEXT DEFAULT '[]'` — JSON array of lowercase tag strings
+- **TagInput**: Reusable component, accepts `tags` array and `onChange` callback
+- **Entry tags**: Displayed as `#work #health` chips below entry content
+- **Search**: Tag filter bar with "All" + all unique tags; clicking a tag filters results
+- **Cleanup**: Tags are lowercased, trimmed, and deduplicated on add
+
+---
+
+## 2026-06-20 — B3 Mood Intensity
+
+### Done
+- [x] Add `intensity INTEGER DEFAULT 0` column to entries table (migration in server.js)
+- [x] Update `PUT /api/entries/:id` to handle intensity field (1-5, clamped)
+- [x] Update `GET /api/moods` to return intensity alongside mood
+- [x] Update `entrySchema` in schemas.js to include `intensity` field
+- [x] Add intensity selector to DashboardPage — 1-5 buttons shown when mood is selected, labels (Mild/Light/Moderate/Strong/Intense)
+- [x] Add intensity selector to EntryCard edit mode
+- [x] Update `MoodBadge` to show intensity label (e.g., "Happy ·Moderate")
+- [x] Update `MoodDot` to scale size by intensity on calendar (1-5 → 1x-1.5x)
+- [x] Update CalendarPage to fetch and pass intensity to MoodDot
+- [x] Update auto-save draft to include intensity
+
+### Architecture State After
+- **DB**: `entries.intensity INTEGER DEFAULT 0` — 0 means no intensity, 1-5 scale
+- **UI**: Intensity selector appears after mood selection, 5 numbered buttons with text label
+- **Display**: MoodBadge shows "·Mild" / "·Intense" etc; MoodDot scales by intensity
+- **Draft**: Auto-save and restore includes intensity value
+
+---
+
+## 2026-06-20 — A5 Data Import
+
+### Done
+- [x] Add `POST /api/import` endpoint — validates JSON structure, supports merge/replace modes
+- [x] Add `api.importData(mode, data)` client function
+- [x] Add Data Import section to SettingsPage — file picker, preview (entry/goal counts), Merge/Replace buttons
+- [x] Transactional inserts for entries and goals (skips entries without content, goals without title)
+- [x] Settings import skips `password` and `session_token` keys for safety
+- [x] Error handling for invalid JSON, missing structure, server failures
+
+### Architecture State After
+- **Import flow**: File picker → FileReader → JSON parse → preview counts → Merge or Replace → transactional insert
+- **Server**: `POST /api/import` accepts `{ mode: 'merge'|'replace', data: { entries, goals, settings } }`
+- **Safety**: Replace mode deletes all entries/goals first; password/session_token never imported
+- **UI**: File input styled with Tailwind, preview card shows counts + export date, Merge/Replace/Cancel buttons
+
+---
+
 ## 2026-06-19 — A3 AI-Powered Digest
 
 ### Done

@@ -42,7 +42,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
   - Embed query → cosine similarity against all entries → top-K results
   - Could also be done client-side for small entry counts
 
-### A5 — Data Import
+### A5 — Data Import ✅ DONE (June 20, 2026)
 - **Problem**: Export exists but no way to restore from the JSON backup.
 - **What**: Import JSON file → validate structure → merge or replace
 - **Needs**:
@@ -71,7 +71,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
   - Streak counter on Dashboard (maybe a small card/badge)
   - Could extend to "longest streak ever" stat
 
-### B3 — Mood Intensity
+### B3 — Mood Intensity ✅ DONE (June 20, 2026)
 - **Problem**: "Anxious" covers everything from mild nervousness to full panic.
 - **What**: 1–5 intensity slider per mood selection
 - **Needs**:
@@ -80,7 +80,7 @@ Brainstorm from June 18, 2026. Tiers ordered by scope — A is small fill-ins, B
   - Display on EntryCard, MoodDot (could tint saturation by intensity)
   - Digest could show intensity trends
 
-### B4 — Tags on Entries
+### B4 — Tags on Entries ✅ DONE (June 20, 2026)
 - **Problem**: Can only slice by date. Can't group entries by topic.
 - **What**: `#work` `#family` `#health` tags — filterable, searchable
 - **Needs**:

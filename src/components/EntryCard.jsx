@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Trash, PencilSimple, Check, X, PushPin } from '@phosphor-icons/react'
 import { MoodBadge } from '@/components/MoodBadge'
 import { MarkdownContent } from '@/components/MarkdownContent'
+import { TagInput } from '@/components/TagInput'
 import { parseDate } from '@/lib/utils'
 import { MOOD_LIST } from '@/lib/moods'
 
@@ -9,6 +10,8 @@ export function EntryCard({ entry, onDelete, onUpdate, onTogglePin }) {
   const [editing, setEditing] = useState(false)
   const [editContent, setEditContent] = useState('')
   const [editMood, setEditMood] = useState('')
+  const [editIntensity, setEditIntensity] = useState(0)
+  const [editTags, setEditTags] = useState([])
 
   const date = parseDate(entry.created_at)
   const formatted = date.toLocaleDateString('en-US', {
@@ -25,6 +28,8 @@ export function EntryCard({ entry, onDelete, onUpdate, onTogglePin }) {
   function startEdit() {
     setEditContent(entry.content)
     setEditMood(entry.mood || '')
+    setEditIntensity(entry.intensity || 0)
+    setEditTags(entry.tags || [])
     setEditing(true)
   }
 
@@ -32,6 +37,8 @@ export function EntryCard({ entry, onDelete, onUpdate, onTogglePin }) {
     setEditing(false)
     setEditContent('')
     setEditMood('')
+    setEditIntensity(0)
+    setEditTags([])
   }
 
   function saveEdit() {
@@ -39,6 +46,8 @@ export function EntryCard({ entry, onDelete, onUpdate, onTogglePin }) {
     onUpdate(entry.id, {
       content: editContent.trim(),
       mood: editMood || null,
+      intensity: editMood && editIntensity ? editIntensity : 0,
+      tags: editTags,
     })
     setEditing(false)
   }
@@ -65,7 +74,10 @@ export function EntryCard({ entry, onDelete, onUpdate, onTogglePin }) {
             <button
               key={value}
               type="button"
-              onClick={() => setEditMood(editMood === value ? '' : value)}
+              onClick={() => {
+                setEditMood(editMood === value ? '' : value)
+                if (editMood === value) setEditIntensity(0)
+              }}
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
                 editMood === value
                   ? 'border-primary bg-primary/10 text-primary'
@@ -76,6 +88,39 @@ export function EntryCard({ entry, onDelete, onUpdate, onTogglePin }) {
               {label}
             </button>
           ))}
+        </div>
+
+        {/* Intensity selector in edit mode */}
+        {editMood && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Intensity:</span>
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setEditIntensity(level === editIntensity ? 0 : level)}
+                  className={`w-6 h-6 rounded text-xs font-bold border transition-all ${
+                    editIntensity >= level
+                      ? 'border-primary bg-primary/20 text-primary'
+                      : 'border-border text-muted-foreground hover:border-muted-foreground'
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tags in edit mode */}
+        <div className="space-y-1">
+          <span className="text-xs text-muted-foreground">Tags:</span>
+          <TagInput
+            tags={editTags}
+            onChange={setEditTags}
+            placeholder="Add tags…"
+          />
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -107,7 +152,7 @@ export function EntryCard({ entry, onDelete, onUpdate, onTogglePin }) {
           <span>{time}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          {entry.mood && <MoodBadge mood={entry.mood} />}
+          {entry.mood && <MoodBadge mood={entry.mood} intensity={entry.intensity} />}
           {onTogglePin && (
             <button
               onClick={() => onTogglePin(entry.id, !entry.pinned)}
@@ -136,6 +181,18 @@ export function EntryCard({ entry, onDelete, onUpdate, onTogglePin }) {
         </div>
       </div>
       <MarkdownContent>{entry.content}</MarkdownContent>
+      {entry.tags?.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {entry.tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
     </article>
   )
 }

@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { api } from '@/api'
 import { useAuth } from '@/contexts/AuthContext'
-import { Gear, Key, Download, Warning, Robot } from '@phosphor-icons/react'
+import { Gear, Key, Download, Upload, Warning, Robot } from '@phosphor-icons/react'
 import { passwordChangeSchema, aiKeySchema } from '@/lib/schemas'
 
 export function SettingsPage() {
@@ -12,6 +12,8 @@ export function SettingsPage() {
   const [success, setSuccess] = useState('')
   const [exportError, setExportError] = useState('')
   const [aiSuccess, setAiSuccess] = useState('')
+  const [importState, setImportState] = useState({ status: 'idle', message: '', preview: null })
+  const fileRef = useRef(null)
 
   const { register, handleSubmit, reset, formState: { errors, isValid } } = useForm({
     resolver: zodResolver(passwordChangeSchema),
@@ -51,6 +53,62 @@ export function SettingsPage() {
   function onAiSubmit(data) {
     setAiSuccess('')
     aiKeyMutation.mutate(data)
+  }
+
+  const importMutation = useMutation({
+    mutationFn: ({ mode, data }) => api.importData(mode, data),
+    onSuccess: (result) => {
+      setImportState({
+        status: 'success',
+        message: `Imported ${result.importedEntries} entries and ${result.importedGoals} goals.`,
+        preview: null,
+      })
+      if (fileRef.current) fileRef.current.value = ''
+    },
+    onError: (err) => {
+      setImportState({ status: 'error', message: err.message, preview: null })
+    },
+  })
+
+  function handleFileChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImportState({ status: 'idle', message: '', preview: null })
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target.result)
+        if (!json.entries && !json.goals) {
+          setImportState({ status: 'error', message: 'Invalid file: must contain entries or goals.', preview: null })
+          return
+        }
+        setImportState({
+          status: 'preview',
+          message: '',
+          preview: {
+            entries: json.entries?.length || 0,
+            goals: json.goals?.length || 0,
+            exportedAt: json.exportedAt,
+            data: json,
+          },
+        })
+      } catch {
+        setImportState({ status: 'error', message: 'Invalid JSON file.', preview: null })
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  function handleImport(mode) {
+    if (!importState.preview?.data) return
+    importMutation.mutate({ mode, data: importState.preview.data })
+  }
+
+  function cancelImport() {
+    setImportState({ status: 'idle', message: '', preview: null })
+    if (fileRef.current) fileRef.current.value = ''
   }
 
   async function handleExport() {
@@ -180,7 +238,7 @@ export function SettingsPage() {
         </form>
       </section>
 
-      {/* Data export */}
+      {/* Data export & import */}
       <section className="rounded-xl border border-border bg-card p-5 space-y-4">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <Download weight="duotone" className="w-4 h-4 text-muted-foreground" />
@@ -202,6 +260,77 @@ export function SettingsPage() {
           <Download weight="bold" className="w-4 h-4" />
           Export Data
         </button>
+      </section>
+
+      {/* Data import */}
+      <section className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Upload weight="duotone" className="w-4 h-4 text-muted-foreground" />
+          Data Import
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Restore entries and goals from a previously exported JSON file.
+        </p>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".json"
+          onChange={handleFileChange}
+          className="block text-sm text-foreground file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:opacity-90 file:cursor-pointer"
+        />
+
+        {importState.status === 'error' && (
+          <p className="text-sm text-destructive flex items-center gap-1.5">
+            <Warning weight="fill" className="w-4 h-4" />
+            {importState.message}
+          </p>
+        )}
+
+        {importState.status === 'success' && (
+          <p className="text-sm text-emerald-500 font-medium">{importState.message}</p>
+        )}
+
+        {importState.status === 'preview' && importState.preview && (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm space-y-1">
+              <p className="font-medium text-foreground">File contents:</p>
+              <p className="text-muted-foreground">
+                {importState.preview.entries} entries, {importState.preview.goals} goals
+                {importState.preview.exportedAt && (
+                  <> (exported {new Date(importState.preview.exportedAt).toLocaleDateString()})</>
+                )}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleImport('merge')}
+                disabled={importMutation.isPending}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {importMutation.isPending ? 'Importing…' : 'Merge (add to existing)'}
+              </button>
+              <button
+                onClick={() => handleImport('replace')}
+                disabled={importMutation.isPending}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-destructive/50 text-destructive text-sm font-semibold hover:bg-destructive/10 transition-colors disabled:opacity-50"
+              >
+                {importMutation.isPending ? 'Importing…' : 'Replace all'}
+              </button>
+              <button
+                onClick={cancelImport}
+                disabled={importMutation.isPending}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:bg-accent transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              <strong>Merge</strong> adds imported data alongside existing entries.
+              <strong className="text-destructive"> Replace</strong> deletes all current entries and goals first.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Danger zone */}

@@ -45,7 +45,7 @@ export function CalendarPage() {
 
   const moodByDate = {}
   moods.forEach((m) => {
-    moodByDate[m.date] = m.mood
+    moodByDate[m.date] = { mood: m.mood, intensity: m.intensity || 0 }
   })
 
   function prevMonth() {
@@ -105,7 +105,7 @@ export function CalendarPage() {
         {Array.from({ length: daysInMonth }).map((_, i) => {
           const day = i + 1
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-          const mood = moodByDate[dateStr]
+          const moodData = moodByDate[dateStr]
           const isToday = dateStr === todayStr
           const isSelected = dateStr === selectedDate
 
@@ -123,7 +123,7 @@ export function CalendarPage() {
               )}
             >
               <span className="text-xs font-medium">{day}</span>
-              {mood && <MoodDot mood={mood} size="sm" />}
+              {moodData && <MoodDot mood={moodData.mood} intensity={moodData.intensity} size="sm" />}
             </button>
           )
         })}

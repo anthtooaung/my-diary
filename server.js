@@ -55,6 +55,16 @@ try {
   db.exec('ALTER TABLE entries ADD COLUMN pinned INTEGER DEFAULT 0')
 } catch { /* column already exists */ }
 
+// Migrate: add intensity column if not exists
+try {
+  db.exec('ALTER TABLE entries ADD COLUMN intensity INTEGER DEFAULT 0')
+} catch { /* column already exists */ }
+
+// Migrate: add tags column if not exists
+try {
+  db.exec("ALTER TABLE entries ADD COLUMN tags TEXT DEFAULT '[]'")
+} catch { /* column already exists */ }
+
 // Migrate existing date formats to ISO 8601 (space → T separator)
 db.prepare("UPDATE entries SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at NOT LIKE '%T%'").run()
 db.prepare("UPDATE goals SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at NOT LIKE '%T%'").run()
@@ -134,7 +144,10 @@ app.get('/api/entries', auth, (req, res) => {
     params.push(parseInt(limit, 10))
   }
 
-  const entries = db.prepare(query).all(...params)
+  const entries = db.prepare(query).all(...params).map(e => ({
+    ...e,
+    tags: JSON.parse(e.tags || '[]'),
+  }))
   res.json(entries)
 })
 
@@ -143,20 +156,27 @@ app.get('/api/entries/:id', auth, (req, res) => {
   if (!entry) {
     return res.status(404).json({ error: 'Entry not found' })
   }
+  entry.tags = JSON.parse(entry.tags || '[]')
   res.json(entry)
 })
 
 app.post('/api/entries', auth, (req, res) => {
-  const { content, mood } = req.body
+  const { content, mood, intensity, tags } = req.body
   if (!content || !content.trim()) {
     return res.status(400).json({ error: 'Content is required' })
   }
 
   const result = db.prepare(
-    'INSERT INTO entries (content, mood) VALUES (?, ?)'
-  ).run(content.trim(), mood || null)
+    'INSERT INTO entries (content, mood, intensity, tags) VALUES (?, ?, ?, ?)'
+  ).run(
+    content.trim(),
+    mood || null,
+    intensity || 0,
+    JSON.stringify(tags || []),
+  )
 
   const entry = db.prepare('SELECT * FROM entries WHERE id = ?').get(result.lastInsertRowid)
+  entry.tags = JSON.parse(entry.tags || '[]')
   res.status(201).json(entry)
 })
 
@@ -166,21 +186,24 @@ app.put('/api/entries/:id', auth, (req, res) => {
     return res.status(404).json({ error: 'Entry not found' })
   }
 
-  const { content, mood, pinned } = req.body
+  const { content, mood, pinned, intensity, tags } = req.body
   if (content !== undefined && (!content || !content.trim())) {
     return res.status(400).json({ error: 'Content cannot be empty' })
   }
 
   db.prepare(
-    'UPDATE entries SET content = ?, mood = ?, pinned = ? WHERE id = ?'
+    'UPDATE entries SET content = ?, mood = ?, pinned = ?, intensity = ?, tags = ? WHERE id = ?'
   ).run(
     content !== undefined ? content.trim() : entry.content,
     mood !== undefined ? mood : entry.mood,
     pinned !== undefined ? (pinned ? 1 : 0) : entry.pinned ?? 0,
+    intensity !== undefined ? Math.max(1, Math.min(5, parseInt(intensity, 10))) : (entry.intensity ?? 0),
+    tags !== undefined ? JSON.stringify(tags) : (entry.tags || '[]'),
     req.params.id,
   )
 
   const updated = db.prepare('SELECT * FROM entries WHERE id = ?').get(req.params.id)
+  updated.tags = JSON.parse(updated.tags || '[]')
   res.json(updated)
 })
 
@@ -196,7 +219,7 @@ app.delete('/api/entries/:id', auth, (req, res) => {
 // ── Mood Routes ───────────────────────────────────────────────────────────
 app.get('/api/moods', auth, (req, res) => {
   const { start, end } = req.query
-  let query = "SELECT date(created_at) as date, mood FROM entries WHERE mood IS NOT NULL AND mood != ''"
+  let query = "SELECT date(created_at) as date, mood, intensity FROM entries WHERE mood IS NOT NULL AND mood != ''"
   const params = []
 
   if (start) {
@@ -309,6 +332,79 @@ app.get('/api/export', auth, (req, res) => {
     goals,
     settings,
   })
+})
+
+app.post('/api/import', auth, (req, res) => {
+  const { mode, data } = req.body
+
+  if (!data || typeof data !== 'object') {
+    return res.status(400).json({ error: 'Invalid import data.' })
+  }
+
+  // Validate structure
+  if (data.entries && !Array.isArray(data.entries)) {
+    return res.status(400).json({ error: 'entries must be an array.' })
+  }
+  if (data.goals && !Array.isArray(data.goals)) {
+    return res.status(400).json({ error: 'goals must be an array.' })
+  }
+
+  const isReplace = mode === 'replace'
+  let importedEntries = 0
+  let importedGoals = 0
+
+  const insertEntries = db.transaction((entries) => {
+    for (const entry of entries) {
+      if (!entry.content) continue
+      db.prepare(
+        'INSERT INTO entries (content, mood, pinned, created_at) VALUES (?, ?, ?, ?)'
+      ).run(
+        entry.content,
+        entry.mood || null,
+        entry.pinned ? 1 : 0,
+        entry.created_at || new Date().toISOString(),
+      )
+      importedEntries++
+    }
+  })
+
+  const insertGoals = db.transaction((goals) => {
+    for (const goal of goals) {
+      if (!goal.title) continue
+      db.prepare(
+        'INSERT INTO goals (title, category, deadline, status, created_at) VALUES (?, ?, ?, ?, ?)'
+      ).run(
+        goal.title,
+        goal.category || 'weekly',
+        goal.deadline || null,
+        goal.status || 'active',
+        goal.created_at || new Date().toISOString(),
+      )
+      importedGoals++
+    }
+  })
+
+  try {
+    if (isReplace) {
+      db.prepare('DELETE FROM entries').run()
+      db.prepare('DELETE FROM goals').run()
+    }
+
+    if (data.entries?.length) insertEntries(data.entries)
+    if (data.goals?.length) insertGoals(data.goals)
+
+    // Import settings (skip password and session_token for safety)
+    if (data.settings?.length) {
+      for (const s of data.settings) {
+        if (s.key === 'password' || s.key === 'session_token') continue
+        db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(s.key, s.value)
+      }
+    }
+
+    res.json({ ok: true, importedEntries, importedGoals })
+  } catch (err) {
+    res.status(500).json({ error: 'Import failed: ' + err.message })
+  }
 })
 
 // ── AI Helper ─────────────────────────────────────────────────────────────

@@ -10,6 +10,7 @@ import { StreakBadge } from '@/components/StreakBadge'
 import { MarkdownToolbar } from '@/components/MarkdownToolbar'
 import { MarkdownContent } from '@/components/MarkdownContent'
 import { useAutoSave } from '@/hooks/useAutoSave'
+import { TagInput } from '@/components/TagInput'
 import { PencilLine, Notebook, FloppyDiskBack } from '@phosphor-icons/react'
 import { MOOD_LIST } from '@/lib/moods'
 import { entrySchema } from '@/lib/schemas'
@@ -22,15 +23,17 @@ export function DashboardPage() {
 
   const { register, handleSubmit, setValue, reset, control, formState: { errors, isValid } } = useForm({
     resolver: zodResolver(entrySchema),
-    defaultValues: { content: '', mood: '' },
+    defaultValues: { content: '', mood: '', intensity: 0, tags: [] },
   })
   const mood = useWatch({ control, name: 'mood' })
   const content = useWatch({ control, name: 'content' })
+  const intensity = useWatch({ control, name: 'intensity' })
+  const tags = useWatch({ control, name: 'tags' })
 
   // Auto-save draft
   const { draft, clearDraft } = useAutoSave(
-    { content, mood },
-    !!(content || mood),
+    { content, mood, intensity, tags },
+    !!(content || mood || tags?.length),
   )
 
   const [draftRestored, setDraftRestored] = useState(false)
@@ -38,7 +41,12 @@ export function DashboardPage() {
   // Restore draft on mount
   useEffect(() => {
     if (draft) {
-      reset({ content: draft.content || '', mood: draft.mood || '' })
+      reset({
+        content: draft.content || '',
+        mood: draft.mood || '',
+        intensity: draft.intensity || 0,
+        tags: draft.tags || [],
+      })
       setDraftRestored(true)
       setTimeout(() => setDraftRestored(false), 3000)
     }
@@ -73,7 +81,12 @@ export function DashboardPage() {
 
   function onSubmit(data) {
     if (!data.content.trim()) return
-    createMutation.mutate({ content: data.content.trim(), mood: data.mood || null })
+    createMutation.mutate({
+      content: data.content.trim(),
+      mood: data.mood || null,
+      intensity: data.mood && data.intensity ? data.intensity : 0,
+      tags: data.tags || [],
+    })
   }
 
   return (
@@ -128,7 +141,10 @@ export function DashboardPage() {
               <button
                 key={value}
                 type="button"
-                onClick={() => setValue('mood', mood === value ? '' : value, { shouldValidate: true })}
+                onClick={() => {
+                  setValue('mood', mood === value ? '' : value, { shouldValidate: true })
+                  if (mood === value) setValue('intensity', 0)
+                }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                   mood === value
                     ? 'border-primary bg-primary/10 text-primary'
@@ -139,6 +155,48 @@ export function DashboardPage() {
                 {label}
               </button>
             ))}
+          </div>
+
+          {/* Intensity slider — shown when mood is selected */}
+          {mood && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">Intensity:</span>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => setValue('intensity', level === intensity ? 0 : level)}
+                    className={`w-8 h-8 rounded-lg text-xs font-bold border transition-all ${
+                      intensity >= level
+                        ? 'border-primary bg-primary/20 text-primary'
+                        : 'border-border text-muted-foreground hover:border-muted-foreground'
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+              {intensity > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {intensity === 1 && 'Mild'}
+                  {intensity === 2 && 'Light'}
+                  {intensity === 3 && 'Moderate'}
+                  {intensity === 4 && 'Strong'}
+                  {intensity === 5 && 'Intense'}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Tags */}
+          <div className="space-y-1">
+            <span className="text-sm text-muted-foreground">Tags:</span>
+            <TagInput
+              tags={tags || []}
+              onChange={(newTags) => setValue('tags', newTags)}
+              placeholder="Add tags (e.g. work, health, family)…"
+            />
           </div>
 
           <div className="flex items-center gap-3">

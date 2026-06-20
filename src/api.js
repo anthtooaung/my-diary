@@ -126,6 +126,13 @@ export const api = {
     return request('/export')
   },
 
+  importData(mode, data) {
+    return request('/import', {
+      method: 'POST',
+      body: JSON.stringify({ mode, data }),
+    })
+  },
+
   // AI
   setAIKey(apiKey) {
     return request('/settings/ai-key', {

@@ -21,12 +21,34 @@ function stripMarkdown(text) {
 export function SearchPage() {
   const [query, setQuery] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTag, setSelectedTag] = useState('')
 
   const { data: results = [], isLoading, isError } = useQuery({
     queryKey: ['search', searchQuery],
     queryFn: () => api.getEntries({ q: searchQuery }),
     enabled: searchQuery.length > 0,
   })
+
+  // Fetch all entries to extract tags
+  const { data: allEntries = [] } = useQuery({
+    queryKey: ['entries'],
+    queryFn: () => api.getEntries(),
+  })
+
+  // Extract unique tags from all entries
+  const allTags = useMemo(() => {
+    const tagSet = new Set()
+    allEntries.forEach((entry) => {
+      (entry.tags || []).forEach((tag) => tagSet.add(tag))
+    })
+    return Array.from(tagSet).sort()
+  }, [allEntries])
+
+  // Filter results by selected tag
+  const filteredResults = useMemo(() => {
+    if (!selectedTag) return highlighted
+    return highlighted.filter((entry) => (entry.tags || []).includes(selectedTag))
+  }, [highlighted, selectedTag])
 
   // Client-side snippet extraction with match highlighting
   const highlighted = useMemo(() => {
@@ -116,6 +138,36 @@ export function SearchPage() {
         </button>
       </form>
 
+      {/* Tag filters */}
+      {allTags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">Filter by tag:</span>
+          <button
+            onClick={() => setSelectedTag('')}
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
+              !selectedTag
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-border text-muted-foreground hover:border-muted-foreground'
+            }`}
+          >
+            All
+          </button>
+          {allTags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
+                selectedTag === tag
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border text-muted-foreground hover:border-muted-foreground'
+              }`}
+            >
+              #{tag}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Results */}
       {searchQuery && (
         <div>
@@ -128,7 +180,7 @@ export function SearchPage() {
             <p className="text-xs text-muted-foreground mb-4">
               {isLoading
                 ? 'Searching…'
-                : `${highlighted.length} result${highlighted.length !== 1 ? 's' : ''} for "${searchQuery}"`}
+                : `${filteredResults.length} result${filteredResults.length !== 1 ? 's' : ''} for "${searchQuery}"${selectedTag ? ` tagged #${selectedTag}` : ''}`}
             </p>
           )}
 
@@ -147,15 +199,15 @@ export function SearchPage() {
                 Something went wrong while searching. Check your connection and retry.
               </p>
             </div>
-          ) : highlighted.length === 0 ? (
+          ) : filteredResults.length === 0 ? (
             <EmptyState
               icon={MagnifyingGlass}
               title="No results found"
-              description="Try different keywords or broader terms."
+              description={selectedTag ? `No entries tagged #${selectedTag} match your search.` : 'Try different keywords or broader terms.'}
             />
           ) : (
             <div className="space-y-3">
-              {highlighted.map((entry) => (
+              {filteredResults.map((entry) => (
                 <article key={entry.id} className="rounded-xl border border-border bg-card p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xs text-muted-foreground">
@@ -171,6 +223,23 @@ export function SearchPage() {
                     className="text-sm text-foreground whitespace-pre-wrap leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: entry.content }}
                   />
+                  {entry.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {entry.tags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                            selectedTag === tag
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-muted text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          #{tag}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
