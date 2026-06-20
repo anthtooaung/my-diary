@@ -24,3 +24,4 @@ data/
 *.sln
 *.sw?
 .claude/settings.json
+.claude/settings.local.json
