@@ -58,6 +58,7 @@ Me — a student who journals every day but struggles to stay consistent, track 
 # Done checklist
 
 - [x] repo public — github.com/anthtooaung/my-diary
+- [x] live — my-diary-bqbj.onrender.com
 - [x] MCP + skill + agent used
 - [x] MIT LICENSE file
 - [x] v1.0 release on GitHub

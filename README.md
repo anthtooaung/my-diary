@@ -2,6 +2,8 @@
 
 AI-powered personal diary with emotion tracking, goal coaching, analytics, and full-text search. Built for a single user.
 
+**Live → https://my-diary-bqbj.onrender.com/** (login: `admin`)
+
 ## Screenshots
 
 | Dashboard | Calendar | Goals |
