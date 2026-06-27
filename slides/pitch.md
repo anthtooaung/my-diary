@@ -59,4 +59,7 @@ Me — a student who journals every day but struggles to stay consistent, track 
 
 - [x] repo public — github.com/anthtooaung/my-diary
 - [x] MCP + skill + agent used
+- [x] MIT LICENSE file
+- [x] v1.0 release on GitHub
+- [x] 13 screenshots in repo
 - [x] report.md in team repo
