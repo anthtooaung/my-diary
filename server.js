@@ -66,8 +66,12 @@ try {
 } catch { /* column already exists */ }
 
 // Migrate existing date formats to ISO 8601 (space → T separator)
-db.prepare("UPDATE entries SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at NOT LIKE '%T%'").run()
-db.prepare("UPDATE goals SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at NOT LIKE '%T%'").run()
+try {
+  db.prepare("UPDATE entries SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at IS NOT NULL AND created_at NOT LIKE '%T%'").run()
+} catch (e) { console.warn('Date migration (entries) skipped:', e.message) }
+try {
+  db.prepare("UPDATE goals SET created_at = REPLACE(created_at, ' ', 'T') || 'Z' WHERE created_at IS NOT NULL AND created_at NOT LIKE '%T%'").run()
+} catch (e) { console.warn('Date migration (goals) skipped:', e.message) }
 
 // ── FTS5 Full-Text Search ─────────────────────────────────────────────────
 // Drop and recreate FTS5 as internal-content table (no content=entries).
