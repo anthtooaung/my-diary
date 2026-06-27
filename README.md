@@ -2,6 +2,16 @@
 
 AI-powered personal diary with emotion tracking, goal coaching, analytics, and full-text search. Built for a single user.
 
+## Screenshots
+
+| Dashboard | Calendar | Goals |
+|-----------|----------|-------|
+| ![Dashboard](screenshots/dashboard.png) | ![Calendar](screenshots/calendar.png) | ![Goals](screenshots/goal-1.png) |
+
+| Stats | Search | Year Review |
+|-------|--------|-------------|
+| ![Stats](screenshots/static-1.png) | ![Search](screenshots/search.png) | ![Year Review](screenshots/year-review.png) |
+
 ## Stack
 
 - **Frontend**: React 19 + Vite 8, React Router 7, TanStack Query 5, Tailwind CSS 4, shadcn/ui
